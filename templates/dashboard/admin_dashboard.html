@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block title %}Executive Admin Portal — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-10 space-y-10">
+  
+  <!-- Admin Header -->
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-gridBorder/50">
+    <div>
+      <span class="badge badge-red mb-1">GOVERNANCE & BI</span>
+      <h1 class="display-title text-white">EXECUTIVE <span class="text-primaryRed">DASHBOARD</span></h1>
+    </div>
+
+    <!-- Admin Navigation Links -->
+    <div class="flex flex-wrap items-center gap-2">
+      <a href="{% url 'dashboard:bookings_list' %}" class="btn btn-secondary btn-sm">Bookings</a>
+      <a href="{% url 'dashboard:seat_management' %}" class="btn btn-secondary btn-sm">Seats & Zones</a>
+      <a href="{% url 'dashboard:games_manage' %}" class="btn btn-secondary btn-sm">Games</a>
+      <a href="{% url 'dashboard:offers_manage' %}" class="btn btn-secondary btn-sm">Offers</a>
+      <a href="{% url 'dashboard:reviews_moderation' %}" class="btn btn-secondary btn-sm">Reviews {% if pending_reviews_count %}<span class="badge badge-amber text-[9px]">{{ pending_reviews_count }}</span>{% endif %}</a>
+      <a href="{% url 'dashboard:payments_list' %}" class="btn btn-secondary btn-sm">Payments</a>
+      {% if IS_SUPER_ADMIN %}
+        <a href="{% url 'dashboard:rbac_matrix' %}" class="btn btn-primary btn-sm">RBAC Matrix</a>
+      {% endif %}
+      <a href="{% url 'dashboard:audit_logs' %}" class="btn btn-secondary btn-sm">Audit Trail</a>
+      <a href="{% url 'dashboard:settings' %}" class="btn btn-secondary btn-sm"><i data-lucide="settings" class="w-3.5 h-3.5"></i></a>
+    </div>
+  </div>
+
+  <!-- Primary Business Intelligence KPI Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    
+    <div class="card bg-surface1 border-gridBorder p-5 space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-mutedRed font-bold uppercase">Today's Revenue</span>
+        <i data-lucide="indian-rupee" class="w-5 h-5 text-emerald-400"></i>
+      </div>
+      <div class="text-3xl font-black text-white">₹{{ todays_revenue|floatformat:2 }}</div>
+      <span class="text-[10px] text-gray-400">Total Lifetime: <strong class="text-emerald-400">₹{{ total_revenue|floatformat:0 }}</strong></span>
+    </div>
+
+    <div class="card bg-surface1 border-gridBorder p-5 space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-mutedRed font-bold uppercase">Today's Bookings</span>
+        <i data-lucide="calendar" class="w-5 h-5 text-primaryRed"></i>
+      </div>
+      <div class="text-3xl font-black text-white">{{ todays_bookings_count }}</div>
+      <span class="text-[10px] text-gray-400">Total Lifetime: <strong class="text-white">{{ total_bookings_count }}</strong></span>
+    </div>
+
+    <div class="card bg-surface1 border-gridBorder p-5 space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-mutedRed font-bold uppercase">Arena Occupancy</span>
+        <i data-lucide="monitor" class="w-5 h-5 text-amber-400"></i>
+      </div>
+      <div class="text-3xl font-black text-emerald-400">{{ active_sessions }} <span class="text-xs text-gray-400 font-normal">/ {{ total_seats }}</span></div>
+      <span class="text-[10px] text-gray-400">{{ available_seats }} Free • {{ maintenance_count }} Maint.</span>
+    </div>
+
+    <div class="card bg-surface1 border-gridBorder p-5 space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-mutedRed font-bold uppercase">Pending Actions</span>
+        <i data-lucide="alert-circle" class="w-5 h-5 text-purple-400"></i>
+      </div>
+      <div class="text-3xl font-black text-amber-400">{{ pending_reviews_count }}</div>
+      <span class="text-[10px] text-gray-400">Reviews & maintenance alerts</span>
+    </div>
+
+  </div>
+
+  <!-- Analytics Charts Section (Chart.js) -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- 7-Day Revenue Trend Line Chart (8 Cols) -->
+    <div class="lg:col-span-8 card bg-surface1 border-gridBorder p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-sm text-white flex items-center gap-2">
+          <i data-lucide="trending-up" class="w-4 h-4 text-emerald-400"></i>
+          <span>7-DAY REVENUE TRAJECTORY</span>
+        </h3>
+        <span class="badge badge-green text-[10px]">INR REVENUE</span>
+      </div>
+      <div class="h-64 relative">
+        <canvas id="revenueTrendChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Zone Distribution Bar/Doughnut (4 Cols) -->
+    <div class="lg:col-span-4 card bg-surface1 border-gridBorder p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-sm text-white flex items-center gap-2">
+          <i data-lucide="pie-chart" class="w-4 h-4 text-primaryRed"></i>
+          <span>ZONE POPULARITY</span>
+        </h3>
+      </div>
+      <div class="h-64 relative">
+        <canvas id="zonePopularityChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Recent Activity Stream & Master Bookings Queue -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- Recent Bookings (7 Cols) -->
+    <div class="lg:col-span-7 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="heading-2 text-white">RECENT RESERVATIONS</h3>
+        <a href="{% url 'dashboard:bookings_list' %}" class="text-xs text-primaryRed font-bold hover:underline">View All &rarr;</a>
+      </div>
+
+      <div class="card p-0 bg-surface1 border-gridBorder overflow-hidden">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Ref</th>
+              <th>Customer</th>
+              <th>Zone / Seats</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in recent_bookings %}
+              <tr>
+                <td class="font-mono text-xs font-bold text-white">#{{ b.booking_reference }}</td>
+                <td class="text-xs text-gray-300 font-semibold">{{ b.customer_name }}</td>
+                <td class="text-xs text-emerald-400 font-mono">{{ b.zone.name }} • {{ b.seat_codes_display }}</td>
+                <td class="text-xs font-bold text-white">₹{{ b.total_amount }}</td>
+                <td>
+                  <span class="badge {% if b.status == 'CONFIRMED' or b.status == 'COMPLETED' %}badge-green{% elif b.status == 'REFUNDED' %}badge-amber{% else %}badge-red{% endif %} text-[9px]">
+                    {{ b.get_status_display }}
+                  </span>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5" class="text-center py-6 text-xs text-gray-400">No recent bookings.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Immutable Audit Trail Activity (5 Cols) -->
+    <div class="lg:col-span-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="heading-2 text-white">AUDIT TRAIL FEED</h3>
+        <a href="{% url 'dashboard:audit_logs' %}" class="text-xs text-primaryRed font-bold hover:underline">Full Log &rarr;</a>
+      </div>
+
+      <div class="card bg-surface1 border-gridBorder p-5 space-y-3 max-h-80 overflow-y-auto">
+        {% for act in recent_activity %}
+          <div class="p-2.5 rounded-lg bg-surface2 border border-gridBorder/30 text-xs space-y-1">
+            <div class="flex items-center justify-between">
+              <strong class="text-white">{{ act.actor_name }} <span class="text-gray-500 font-normal">({{ act.actor_role }})</span></strong>
+              <span class="text-[10px] text-gray-400">{{ act.created_at|date:"H:i" }}</span>
+            </div>
+            <p class="text-gray-300 text-[11px]">{{ act.description }}</p>
+          </div>
+        {% empty %}
+          <p class="text-xs text-gray-400 text-center py-6">No audit activities logged yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1. Revenue Trend Chart
+    const revCtx = document.getElementById('revenueTrendChart').getContext('2d');
+    new Chart(revCtx, {
+      type: 'line',
+      data: {
+        labels: {{ daily_labels_json|safe }},
+        datasets: [{
+          label: 'Revenue (₹)',
+          data: {{ daily_revenues_json|safe }},
+          borderColor: '#FF3B4D',
+          backgroundColor: 'rgba(255, 59, 77, 0.15)',
+          fill: true,
+          tension: 0.4,
+          borderWidth: 3,
+          pointBackgroundColor: '#FF3B4D',
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { grid: { color: 'rgba(90, 29, 39, 0.3)' }, ticks: { color: '#9CA3AF' } },
+          x: { grid: { color: 'rgba(90, 29, 39, 0.3)' }, ticks: { color: '#9CA3AF' } }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    // 2. Zone Popularity Chart
+    const zoneCtx = document.getElementById('zonePopularityChart').getContext('2d');
+    new Chart(zoneCtx, {
+      type: 'doughnut',
+      data: {
+        labels: {{ zone_names_json|safe }},
+        datasets: [{
+          data: {{ zone_booking_counts_json|safe }},
+          backgroundColor: ['#FF3B4D', '#10B981', '#F59E0B', '#A855F7'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#9CA3AF', font: { size: 10 } } }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}

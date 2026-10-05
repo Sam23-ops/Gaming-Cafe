@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Confirmed #{{ booking.booking_reference }} — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-14 max-w-3xl space-y-8">
+  
+  <!-- Success Hero Banner -->
+  <div class="card bg-gradient-to-br from-emerald-950/50 via-surface1 to-surface2 border-emerald-500/50 p-8 text-center space-y-4 shadow-2xl">
+    <div class="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500 text-emerald-400 flex items-center justify-center mx-auto shadow-lg">
+      <i data-lucide="check-circle-2" class="w-8 h-8"></i>
+    </div>
+    
+    <span class="badge badge-green text-xs">BOOKING CONFIRMED & SEATS LOCKED</span>
+    <h1 class="heading-1 text-white">READY FOR COMBAT, {{ booking.customer_name|upper }}!</h1>
+    <p class="text-xs text-gray-300">
+      Your battle station reservation is secured. Show your digital QR pass at the arena reception for instant check-in.
+    </p>
+
+    <div class="inline-flex items-center gap-2 font-mono text-sm bg-surface3 px-4 py-2 rounded-xl border border-gridBorder">
+      <span class="text-gray-400">REFERENCE:</span>
+      <span class="text-primaryRed font-bold">{{ booking.booking_reference }}</span>
+    </div>
+  </div>
+
+  <!-- Digital Pass & Details Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
+    
+    <!-- QR Pass Card (Left 5 Cols) -->
+    <div class="md:col-span-5 card bg-surface1 border-gridBorder p-6 flex flex-col items-center justify-between text-center space-y-4">
+      <div class="space-y-1">
+        <h3 class="font-bold text-sm text-white">DIGITAL ENTRY PASS</h3>
+        <p class="text-[11px] text-gray-400">Scan at arena front desk</p>
+      </div>
+
+      <div class="p-3 bg-white rounded-2xl shadow-xl">
+        <img src="{{ qr_code_base64 }}" alt="Booking QR Code" class="w-44 h-44 mx-auto">
+      </div>
+
+      <div class="w-full space-y-2 pt-2">
+        <a href="{% url 'bookings:ticket' booking_reference=booking.booking_reference %}" target="_blank" class="btn btn-primary btn-sm w-full justify-center">
+          <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+          <span>Open Full Ticket Pass</span>
+        </a>
+        <a href="{% url 'payments:invoice' booking_reference=booking.booking_reference %}" class="btn btn-secondary btn-sm w-full justify-center">
+          <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
+          <span>View GST Invoice</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Booking Summary Card (Right 7 Cols) -->
+    <div class="md:col-span-7 card bg-surface2 border-gridBorder p-6 flex flex-col justify-between space-y-6">
+      <div>
+        <h3 class="font-bold text-sm text-mutedRed uppercase tracking-wider mb-4">SESSION SPECIFICATIONS</h3>
+
+        <div class="space-y-3 text-xs">
+          <div class="flex justify-between py-1.5 border-b border-gridBorder/40">
+            <span class="text-gray-400">Gaming Zone</span>
+            <span class="text-white font-bold">{{ booking.zone.name }}</span>
+          </div>
+
+          <div class="flex justify-between py-1.5 border-b border-gridBorder/40">
+            <span class="text-gray-400">Allocated Seat(s)</span>
+            <span class="text-emerald-400 font-mono font-bold">{{ booking.seat_codes_display }}</span>
+          </div>
+
+          <div class="flex justify-between py-1.5 border-b border-gridBorder/40">
+            <span class="text-gray-400">Date & Slot</span>
+            <span class="text-white font-bold">{{ booking.booking_date|date:"l, d F Y" }} @ {{ booking.start_time|time:"H:i" }}</span>
+          </div>
+
+          <div class="flex justify-between py-1.5 border-b border-gridBorder/40">
+            <span class="text-gray-400">Duration</span>
+            <span class="text-white font-bold">{{ booking.duration_hours }} Hour(s) (Until {{ booking.end_time|time:"H:i" }})</span>
+          </div>
+
+          <div class="flex justify-between py-1.5 border-b border-gridBorder/40">
+            <span class="text-gray-400">Total Paid</span>
+            <span class="text-primaryRed font-black text-sm">₹{{ booking.total_amount }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Utilities -->
+      <div class="pt-4 border-t border-gridBorder/50 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <a href="https://maps.google.com/?q={{ GLOBAL_SETTINGS.VENUE_ADDRESS }}" target="_blank" class="text-gray-300 hover:text-primaryRed flex items-center gap-1.5">
+          <i data-lucide="map-pin" class="w-4 h-4 text-primaryRed"></i>
+          <span>Get Arena Directions</span>
+        </a>
+        <a href="{% url 'accounts:dashboard' %}" class="btn btn-outline btn-sm">
+          Go to Gamer Dashboard &rarr;
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

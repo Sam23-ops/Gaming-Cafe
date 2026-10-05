@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}QR Ticket Check-In Scanner — Gammers Adda Staff{% endblock %}
+
+{% block content %}
+<div class="container py-12 max-w-2xl space-y-8" x-data="qrTerminal()">
+  
+  <div class="text-center space-y-2">
+    <span class="badge badge-green">FAST RECEPTION SCANNER</span>
+    <h1 class="display-title text-white">QR TICKET <span class="text-primaryRed">CHECK-IN</span></h1>
+    <p class="text-xs text-gray-400">Scan customer QR pass or lookup by Booking Reference / Phone Number to start live session.</p>
+  </div>
+
+  <!-- Terminal Card -->
+  <div class="card bg-surface1 border-gridBorder p-8 space-y-6 shadow-2xl">
+    
+    <!-- Search / Code Input Bar -->
+    <div class="space-y-2">
+      <label class="form-label">Scan Barcode / Enter Reference ID / Phone</label>
+      <div class="flex gap-2">
+        <input type="text" x-model="qrInput" @keyup.enter="validateCheckin()" placeholder="e.g. GA-260902-A1B2C or paste QR data..." class="form-input text-xs font-mono">
+        <button type="button" @click="validateCheckin()" :disabled="loading" class="btn btn-primary flex-shrink-0">
+          <i data-lucide="scan-line" class="w-4 h-4"></i>
+          <span>Check In</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Scanner Simulation Box -->
+    <div class="p-6 rounded-2xl bg-surface2 border border-gridBorder text-center space-y-4">
+      <div class="w-24 h-24 rounded-2xl bg-surface3 border-2 border-dashed border-primaryRed flex items-center justify-center mx-auto text-primaryRed">
+        <i data-lucide="camera" class="w-10 h-10 animate-pulse"></i>
+      </div>
+      <p class="text-xs text-gray-300">Scanner hardware active. Position QR pass in front of optical sensor.</p>
+    </div>
+
+    <!-- Alert / Validation Output Banner -->
+    <div x-show="resultMessage" x-transition class="p-4 rounded-xl text-xs font-bold"
+         :class="resultSuccess ? 'bg-emerald-950/60 border border-emerald-600 text-emerald-300' : 'bg-red-950/60 border border-red-700 text-red-300'"
+         x-text="resultMessage"></div>
+
+    {% if booking_match %}
+      <div class="p-5 rounded-2xl bg-surface2 border border-gridBorder space-y-3 text-xs">
+        <h4 class="font-bold text-white">MATCH FOUND:</h4>
+        <div class="flex justify-between"><span class="text-gray-400">Player:</span><strong class="text-white">{{ booking_match.customer_name }}</strong></div>
+        <div class="flex justify-between"><span class="text-gray-400">Seats:</span><span class="text-emerald-400 font-mono font-bold">{{ booking_match.seat_codes_display }}</span></div>
+        <div class="flex justify-between"><span class="text-gray-400">Status:</span><span class="badge badge-amber text-[9px]">{{ booking_match.get_status_display }}</span></div>
+        
+        <form method="POST" action="{% url 'staff:api_validate_checkin' %}" class="pt-2">
+          {% csrf_token %}
+          <input type="hidden" name="qr_data" value="{{ booking_match.booking_reference }}">
+          <button type="submit" class="btn btn-primary w-full justify-center">
+            Confirm & Start Session Timer
+          </button>
+        </form>
+      </div>
+    {% endif %}
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function qrTerminal() {
+    return {
+      qrInput: '',
+      loading: false,
+      resultMessage: '',
+      resultSuccess: false,
+
+      async validateCheckin() {
+        if (!this.qrInput.trim()) return;
+        this.loading = true;
+        this.resultMessage = '';
+
+        try {
+          const formData = new FormData();
+          formData.append('qr_data', this.qrInput.trim());
+
+          const res = await fetch('/staff/api/validate-checkin/', {
+            method: 'POST',
+            headers: {'X-CSRFToken': '{{ csrf_token }}'},
+            body: formData
+          });
+          const data = await res.json();
+          this.resultSuccess = data.success;
+          this.resultMessage = data.message;
+          if (data.success) {
+            this.qrInput = '';
+          }
+        } catch(e) {
+          this.resultSuccess = false;
+          this.resultMessage = 'Network error during validation.';
+        } finally {
+          this.loading = false;
+        }
+      }
+    }
+  }
+</script>
+{% endblock %}

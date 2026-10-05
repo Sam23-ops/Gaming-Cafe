@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Offers & Promo Deals — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-12 space-y-12">
+  
+  <div class="text-center max-w-2xl mx-auto space-y-3">
+    <span class="badge badge-red">SPECIAL PROMOTIONS</span>
+    <h1 class="display-title text-white">DEALS & <span class="text-primaryRed">COUPONS</span></h1>
+    <p class="text-sm text-gray-400">Unlock discounts on your gaming sessions. Copy the code and apply it during checkout.</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for offer in offers %}
+      <div class="card bg-surface1 border-gridBorder hover:border-primaryRed p-6 flex flex-col justify-between group">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="badge badge-amber text-[10px]">{{ offer.banner_tag }}</span>
+            <div class="flex items-center gap-2">
+              {% if offer.is_fresh %}
+                <span class="badge badge-green text-[10px]">🆕 NEW</span>
+              {% endif %}
+              <span class="badge badge-red text-[10px]">{{ offer.get_offer_type_display }}</span>
+            </div>
+          </div>
+
+          <h3 class="text-xl font-bold text-white group-hover:text-primaryRed transition">{{ offer.title }}</h3>
+          <p class="text-xs text-gray-300 mt-2 leading-relaxed">{{ offer.description }}</p>
+
+          <!-- Countdown Timer -->
+          {% if offer.remaining_seconds is not None %}
+            <div class="mt-3 p-3 rounded-lg bg-surface2/60 border {% if offer.is_expiring_soon %}border-amber-500/50 animate-pulse{% else %}border-gridBorder/40{% endif %}">
+              <div class="flex items-center gap-2">
+                <i data-lucide="clock" class="w-4 h-4 {% if offer.is_expiring_soon %}text-amber-400{% else %}text-gray-400{% endif %}"></i>
+                <div class="flex-1">
+                  <span class="text-[10px] text-gray-400 block">{% if offer.is_expiring_soon %}⚠️ EXPIRING SOON{% else %}Time Remaining{% endif %}</span>
+                  <span class="text-sm font-mono font-bold {% if offer.is_expiring_soon %}text-amber-400{% else %}text-white{% endif %}" 
+                        data-countdown="{{ offer.remaining_seconds }}">
+                    {{ offer.expires_display }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+
+          <div class="my-6 p-4 rounded-xl bg-surface2 border border-gridBorder/50 flex items-center justify-between">
+            <div>
+              <span class="text-xs text-gray-400 block">Discount</span>
+              <span class="text-2xl font-black text-primaryRed">
+                {% if offer.offer_type == 'PERCENT' or offer.offer_type == 'STUDENT' or offer.offer_type == 'HAPPY_HOUR' %}
+                  {{ offer.discount_value|floatformat:0 }}% OFF
+                {% else %}
+                  ₹{{ offer.discount_value|floatformat:0 }} FLAT OFF
+                {% endif %}
+              </span>
+            </div>
+            {% if offer.coupon_code %}
+              <div class="text-right">
+                <span class="text-[10px] text-gray-400 block">Coupon Code</span>
+                <span class="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/60 px-2.5 py-1 rounded border border-emerald-700">
+                  {{ offer.coupon_code }}
+                </span>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Eligibility Rules -->
+          <div class="space-y-1 text-[11px] text-gray-400">
+            {% if offer.min_order_amount > 0 %}
+              <p>• Min. booking amount: ₹{{ offer.min_order_amount }}</p>
+            {% endif %}
+            {% if offer.max_discount_cap %}
+              <p>• Max discount cap: ₹{{ offer.max_discount_cap }}</p>
+            {% endif %}
+            {% if offer.applicable_zones.all %}
+              <p>• Applicable to: {% for z in offer.applicable_zones.all %}{{ z.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="pt-6 mt-6 border-t border-gridBorder/40">
+          <a href="{% url 'bookings:wizard' %}{% if offer.coupon_code %}?coupon={{ offer.coupon_code }}{% endif %}" class="btn btn-primary w-full justify-center text-xs font-bold">
+            APPLY OFFER IN BOOKING
+          </a>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-span-3 card bg-surface1 border-gridBorder p-12 text-center text-xs text-gray-400">
+        No active offers at this moment. Check back soon for weekend specials!
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<script>
+  // ── Countdown Timer Ticker ──────────────────────────────────────────────────
+  function startCountdownTimers() {
+    const timers = document.querySelectorAll('[data-countdown]');
+    timers.forEach(el => {
+      let secs = parseInt(el.dataset.countdown, 10);
+      if (isNaN(secs) || secs <= 0) return;
+      
+      const tick = () => {
+        if (secs <= 0) {
+          el.textContent = 'Expired';
+          el.classList.remove('animate-pulse');
+          return;
+        }
+        const h = Math.floor(secs / 3600);
+        const m = Math.floor((secs % 3600) / 60);
+        const s = secs % 60;
+        if (h >= 24) {
+          const d = Math.floor(h / 24);
+          el.textContent = `${d}d ${h % 24}h remaining`;
+        } else {
+          el.textContent = `${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+        }
+        secs--;
+      };
+      
+      tick();
+      setInterval(tick, 1000);
+    });
+  }
+  
+  document.addEventListener('DOMContentLoaded', startCountdownTimers);
+</script>
+{% endblock %}

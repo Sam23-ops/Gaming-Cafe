@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Immutable Audit Trail Explorer — Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container py-10 space-y-8">
+  
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div>
+      <span class="badge badge-red mb-1">COMPLIANCE & GOVERNANCE</span>
+      <h1 class="display-title text-white">AUDIT <span class="text-primaryRed">LOGS</span></h1>
+      <p class="text-xs text-gray-400">Append-only immutable event ledger of all sensitive operational, administrative, and financial actions.</p>
+    </div>
+    <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+  </div>
+
+  <!-- Action Type Filter -->
+  <form method="GET" class="card bg-surface1 border-gridBorder p-4 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <label class="text-xs text-gray-400 font-bold uppercase">Filter by Action:</label>
+      <select name="action" class="form-select text-xs w-48" onchange="this.form.submit()">
+        <option value="">All Action Types</option>
+        {% for code, label in action_choices %}
+          <option value="{{ code }}" {% if selected_action == code %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <span class="text-xs text-mutedRed font-mono font-bold">{{ logs.count }} Log Entries</span>
+  </form>
+
+  <!-- Logs Table -->
+  <div class="card p-0 bg-surface1 border-gridBorder overflow-x-auto shadow-2xl">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Actor (Role)</th>
+          <th>Action Type</th>
+          <th>Entity</th>
+          <th>Description & Summary</th>
+          <th>IP Address</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+          <tr>
+            <td class="text-xs font-mono text-gray-400 whitespace-nowrap">{{ log.created_at|date:"Y-m-d H:i:s" }}</td>
+            <td class="text-xs">
+              <strong class="text-white block">{{ log.actor_name }}</strong>
+              <span class="text-mutedRed text-[10px]">{{ log.actor_role }}</span>
+            </td>
+            <td>
+              <span class="badge {% if log.action_type == 'CREATE' or log.action_type == 'PAYMENT' %}badge-green{% elif log.action_type == 'REFUND' or log.action_type == 'MAINTENANCE' %}badge-amber{% else %}badge-red{% endif %} text-[9px]">
+                {{ log.get_action_type_display }}
+              </span>
+            </td>
+            <td class="text-xs text-gray-300 font-mono">{{ log.entity_name }} #{{ log.entity_id }}</td>
+            <td class="text-xs text-gray-300">{{ log.description }}</td>
+            <td class="text-xs font-mono text-gray-500">{{ log.ip_address|default:'127.0.0.1' }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6" class="text-center py-8 text-xs text-gray-400">No audit logs matching selection.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

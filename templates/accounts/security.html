@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Account Security — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-12 max-w-xl">
+  <div class="card bg-surface1 border-gridBorder p-8 space-y-6">
+    
+    <div class="space-y-1">
+      <span class="badge badge-red">SECURITY CREDENTIALS</span>
+      <h1 class="heading-1 text-white">CHANGE PASSWORD</h1>
+      <p class="text-xs text-gray-400">Keep your gamer account and booking history secured with a strong password.</p>
+    </div>
+
+    <form method="POST" class="space-y-4">
+      {% csrf_token %}
+      
+      {% for field in form %}
+        <div class="form-group">
+          <label class="form-label">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <p class="text-xs text-red-400 mt-1">{{ field.errors.0 }}</p>
+          {% endif %}
+          {% if field.help_text %}
+            <p class="text-[11px] text-gray-500 mt-1">{{ field.help_text }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <div class="pt-4 border-t border-gridBorder/50 flex items-center justify-between">
+        <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+        <button type="submit" class="btn btn-primary">Update Password</button>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

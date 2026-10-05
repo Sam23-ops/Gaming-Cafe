@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Login — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-16 max-w-md">
+  <div class="card bg-surface1 border-gridBorder p-8 space-y-6 shadow-2xl">
+    
+    <div class="text-center space-y-2">
+      <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-surface2 border border-gridBorder text-primaryRed mb-2">
+        <i data-lucide="shield-check" class="w-6 h-6"></i>
+      </div>
+      <h1 class="heading-1 text-white">GAMER LOGIN</h1>
+      <p class="text-xs text-gray-400">Enter your credentials to access your arena account & active bookings.</p>
+    </div>
+
+    <form method="POST" class="space-y-4">
+      {% csrf_token %}
+      {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+      {% endif %}
+
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        {{ form.username }}
+        {% if form.username.errors %}<p class="text-xs text-red-400 mt-1">{{ form.username.errors.0 }}</p>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <div class="flex items-center justify-between mb-1">
+          <label class="form-label mb-0">Password</label>
+        </div>
+        {{ form.password }}
+        {% if form.password.errors %}<p class="text-xs text-red-400 mt-1">{{ form.password.errors.0 }}</p>{% endif %}
+      </div>
+
+      {% if form.non_field_errors %}
+        <div class="p-3 rounded-lg bg-red-950/40 border border-red-800 text-xs text-red-300">
+          {{ form.non_field_errors.0 }}
+        </div>
+      {% endif %}
+
+      <button type="submit" class="btn btn-primary w-full py-3 justify-center text-sm font-bold shadow-lg shadow-primaryRed/30">
+        <i data-lucide="log-in" class="w-4 h-4"></i>
+        <span>ENTER THE ARENA</span>
+      </button>
+    </form>
+
+    <div class="pt-4 border-t border-gridBorder/50 text-center text-xs text-gray-400 space-y-2">
+      <p>New to Gammers Adda? <a href="{% url 'accounts:register' %}{% if next %}?next={{ next }}{% endif %}" class="text-primaryRed font-bold hover:underline">Create Account (+100 XP)</a></p>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

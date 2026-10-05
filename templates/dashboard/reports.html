@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Operational & Analytics Reports — Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container py-10 space-y-8">
+  
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div>
+      <span class="badge badge-red mb-1">PERFORMANCE INSIGHTS</span>
+      <h1 class="display-title text-white">ANALYTICS & <span class="text-primaryRed">REPORTS</span></h1>
+    </div>
+    <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    
+    <!-- Peak Hours -->
+    <div class="card bg-surface1 border-gridBorder p-6 space-y-4">
+      <h3 class="font-bold text-sm text-white flex items-center gap-2">
+        <i data-lucide="clock" class="w-4 h-4 text-amber-400"></i>
+        <span>PEAK BOOKING WINDOWS</span>
+      </h3>
+      <div class="space-y-2 text-xs">
+        {% for h in hour_distribution %}
+          <div class="flex justify-between py-1.5 border-b border-gridBorder/30">
+            <span class="text-gray-300 font-mono">{{ h.start_time|time:"H:i" }}</span>
+            <span class="text-white font-bold">{{ h.count }} reservations</span>
+          </div>
+        {% empty %}
+          <p class="text-gray-400">No session data available yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Top Games Ranked -->
+    <div class="card bg-surface1 border-gridBorder p-6 space-y-4">
+      <h3 class="font-bold text-sm text-white flex items-center gap-2">
+        <i data-lucide="gamepad-2" class="w-4 h-4 text-primaryRed"></i>
+        <span>TOP PLAYED TITLES</span>
+      </h3>
+      <div class="space-y-2 text-xs">
+        {% for g in popular_games %}
+          <div class="flex justify-between py-1.5 border-b border-gridBorder/30">
+            <span class="text-gray-300">{{ g.title }}</span>
+            <span class="text-amber-400 font-bold">★ {{ g.rating }}</span>
+          </div>
+        {% empty %}
+          <p class="text-gray-400">No titles ranked yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Top Offers Redeemed -->
+    <div class="card bg-surface1 border-gridBorder p-6 space-y-4">
+      <h3 class="font-bold text-sm text-white flex items-center gap-2">
+        <i data-lucide="tag" class="w-4 h-4 text-emerald-400"></i>
+        <span>PROMOTION REDEMPTIONS</span>
+      </h3>
+      <div class="space-y-2 text-xs">
+        {% for o in top_offers %}
+          <div class="flex justify-between py-1.5 border-b border-gridBorder/30">
+            <span class="text-gray-300">{{ o.title }}</span>
+            <span class="text-emerald-400 font-bold">{{ o.usage_count }} times used</span>
+          </div>
+        {% empty %}
+          <p class="text-gray-400">No promo usages recorded yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

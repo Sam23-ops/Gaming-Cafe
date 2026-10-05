@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Games Manager — Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container py-10 space-y-8">
+  
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div>
+      <span class="badge badge-red mb-1">CONTENT CONTROL</span>
+      <h1 class="display-title text-white">GAMES <span class="text-primaryRed">MANAGER</span></h1>
+    </div>
+    <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+  </div>
+
+  <!-- Add New Game Form -->
+  <div class="card bg-surface1 border-gridBorder p-6 space-y-4" x-data="{ showForm: false }">
+    <div class="flex items-center justify-between">
+      <h3 class="font-bold text-sm text-white uppercase tracking-wider">ADD NEW TITLE TO VAULT</h3>
+      <button type="button" @click="showForm = !showForm" class="btn btn-primary btn-sm">
+        <span x-text="showForm ? 'Hide Form' : '+ Add New Game'"></span>
+      </button>
+    </div>
+
+    <form method="POST" x-show="showForm" x-transition class="space-y-4 pt-3 border-t border-gridBorder/40">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create">
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="form-group">
+          <label class="form-label">Game Title</label>
+          <input type="text" name="title" required placeholder="e.g. Counter-Strike 2" class="form-input text-xs">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Genre</label>
+          <select name="genre_id" required class="form-select text-xs">
+            {% for g in genres %}
+              <option value="{{ g.id }}">{{ g.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rating (e.g. 4.9)</label>
+          <input type="text" name="rating" value="4.8" class="form-input text-xs">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="form-group">
+          <label class="form-label">Cover Image URL</label>
+          <input type="url" name="cover_url" placeholder="https://images.unsplash.com/..." class="form-input text-xs">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tagline</label>
+          <input type="text" name="tagline" placeholder="Tactical 5v5 shooter" class="form-input text-xs">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea name="description" rows="3" required placeholder="Game description..." class="form-input text-xs"></textarea>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <label class="flex items-center gap-2 text-xs text-white">
+          <input type="checkbox" name="is_featured" value="1" class="rounded text-primaryRed">
+          <span>Mark as Featured on Home Page</span>
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-sm">Save & Publish Game</button>
+    </form>
+  </div>
+
+  <!-- Games Catalog Table -->
+  <div class="card p-0 bg-surface1 border-gridBorder overflow-x-auto shadow-2xl">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Cover & Title</th>
+          <th>Genre</th>
+          <th>Rating</th>
+          <th>Mode</th>
+          <th>Availability Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for game in games %}
+          <tr>
+            <td class="text-xs">
+              <div class="flex items-center gap-3">
+                <img src="{{ game.display_image }}" alt="{{ game.title }}" class="w-10 h-14 object-cover rounded bg-surface2">
+                <div>
+                  <strong class="text-white block">{{ game.title }}</strong>
+                  <span class="text-gray-400 text-[10px]">{{ game.developer }}</span>
+                </div>
+              </div>
+            </td>
+            <td class="text-xs text-gray-300">{{ game.genre.name }}</td>
+            <td class="text-xs font-bold text-amber-400">★ {{ game.rating }}</td>
+            <td class="text-xs text-gray-400">{{ game.get_player_mode_display }}</td>
+            <td>
+              <span class="badge {% if game.is_available %}badge-green{% else %}badge-red{% endif %} text-[9px]">
+                {% if game.is_available %}● ONLINE{% else %}● PATCHING{% endif %}
+              </span>
+            </td>
+            <td>
+              <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="toggle_availability">
+                <input type="hidden" name="game_id" value="{{ game.id }}">
+                <button type="submit" class="btn btn-secondary btn-sm text-[10px] py-1 px-2">
+                  Toggle Status
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

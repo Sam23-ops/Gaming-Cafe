@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}About & Arena Hardware Specs — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-14 space-y-16">
+  
+  <!-- Header -->
+  <div class="max-w-3xl space-y-4">
+    <span class="badge badge-red">THE GAMMERS ADDA SANCTUM</span>
+    <h1 class="display-title text-white">ENGINEERED FOR <span class="text-primaryRed">VICTORY</span></h1>
+    <p class="text-gray-300 leading-relaxed text-base">
+      Founded by esports veterans and tech purists, Gammers Adda is a state-of-the-art gaming sanctuary. We operate 24+ high-performance battle stations with zero compromises on thermals, frame rates, or peripheral precision.
+    </p>
+  </div>
+
+  <!-- Hardware Infrastructure Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="card bg-surface2 border-gridBorder p-6 space-y-3">
+      <div class="w-10 h-10 rounded-lg bg-primaryRed/20 text-primaryRed flex items-center justify-center">
+        <i data-lucide="cpu" class="w-6 h-6"></i>
+      </div>
+      <h3 class="font-bold text-lg text-white">RTX 4090 Rigs</h3>
+      <p class="text-xs text-gray-400">Intel Core i9-14900K, GeForce RTX 4090 24GB VRAM, 64GB 6000MHz DDR5 RAM, and 2TB PCIe Gen4 NVMe.</p>
+    </div>
+
+    <div class="card bg-surface2 border-gridBorder p-6 space-y-3">
+      <div class="w-10 h-10 rounded-lg bg-primaryRed/20 text-primaryRed flex items-center justify-center">
+        <i data-lucide="tv" class="w-6 h-6"></i>
+      </div>
+      <h3 class="font-bold text-lg text-white">240Hz OLED Displays</h3>
+      <p class="text-xs text-gray-400">Ultra-fast 0.03ms response time, 1440p / 4K high refresh rate monitors with G-Sync Ultimate certification.</p>
+    </div>
+
+    <div class="card bg-surface2 border-gridBorder p-6 space-y-3">
+      <div class="w-10 h-10 rounded-lg bg-primaryRed/20 text-primaryRed flex items-center justify-center">
+        <i data-lucide="wifi" class="w-6 h-6"></i>
+      </div>
+      <h3 class="font-bold text-lg text-white">1Gbps Dedicated Fiber</h3>
+      <p class="text-xs text-gray-400">Dual-redundant optical routing with sub-5ms latency to Mumbai, Singapore, and European gaming servers.</p>
+    </div>
+
+    <div class="card bg-surface2 border-gridBorder p-6 space-y-3">
+      <div class="w-10 h-10 rounded-lg bg-primaryRed/20 text-primaryRed flex items-center justify-center">
+        <i data-lucide="headset" class="w-6 h-6"></i>
+      </div>
+      <h3 class="font-bold text-lg text-white">Esports Peripherals</h3>
+      <p class="text-xs text-gray-400">Razer Huntsman V3 Pro Analog keyboards, Logitech G Pro X Superlight mice, and HyperX Cloud III headsets.</p>
+    </div>
+  </div>
+
+  <!-- Zones Breakdown -->
+  <div class="space-y-8">
+    <h2 class="heading-1 text-white">OUR BATTLE ZONES</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {% for zone in zones %}
+        <div class="card bg-surface1 border-gridBorder p-8 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-surface2 border border-gridBorder flex items-center justify-center text-primaryRed">
+                <i data-lucide="{{ zone.icon }}" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-white">{{ zone.name }}</h3>
+                <span class="text-xs text-emerald-400 font-bold">₹{{ zone.hourly_rate }}/hour</span>
+              </div>
+            </div>
+            <span class="badge badge-red">{{ zone.seats.count }} Seats</span>
+          </div>
+          <p class="text-xs text-gray-300 leading-relaxed">{{ zone.description }}</p>
+          <div class="pt-4 border-t border-gridBorder/40">
+            <a href="{% url 'bookings:wizard' %}?zone={{ zone.id }}" class="btn btn-outline btn-sm">
+              Reserve Seat in {{ zone.name }} &rarr;
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

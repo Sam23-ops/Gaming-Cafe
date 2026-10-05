@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Seat & Zone Management — Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container py-10 space-y-10">
+  
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div>
+      <span class="badge badge-red mb-1">INVENTORY CONFIGURATION</span>
+      <h1 class="display-title text-white">SEATS & <span class="text-primaryRed">ZONES</span></h1>
+    </div>
+    <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+  </div>
+
+  <!-- Create New Seat Station Form -->
+  <div class="card bg-surface1 border-gridBorder p-6 space-y-4">
+    <h3 class="font-bold text-sm text-white uppercase tracking-wider">ADD NEW BATTLE STATION</h3>
+    <form method="POST" class="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_seat">
+
+      <div class="form-group mb-0">
+        <label class="form-label">Seat Code</label>
+        <input type="text" name="code" placeholder="e.g. PC-13" required class="form-input text-xs font-mono uppercase">
+      </div>
+
+      <div class="form-group mb-0">
+        <label class="form-label">Zone</label>
+        <select name="zone_id" required class="form-select text-xs">
+          {% for z in zones %}
+            <option value="{{ z.id }}">{{ z.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group mb-0">
+        <label class="form-label">Platform Rig</label>
+        <select name="platform_id" required class="form-select text-xs">
+          {% for p in platforms %}
+            <option value="{{ p.id }}">{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group mb-0">
+        <label class="form-label">Grid Coordinates (R, C)</label>
+        <div class="grid grid-cols-2 gap-1">
+          <input type="number" name="grid_row" value="1" min="1" class="form-input text-xs">
+          <input type="number" name="grid_col" value="1" min="1" class="form-input text-xs">
+        </div>
+      </div>
+
+      <div>
+        <button type="submit" class="btn btn-primary w-full justify-center text-xs h-[42px]">
+          + Add Station
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Zones & Current Stations Table -->
+  <div class="space-y-8">
+    {% for zone in zones %}
+      <div class="card p-0 bg-surface1 border-gridBorder overflow-hidden space-y-0">
+        <div class="p-4 bg-surface2 border-b border-gridBorder flex items-center justify-between">
+          <div class="flex items-center gap-2 font-bold text-white">
+            <i data-lucide="{{ zone.icon }}" class="w-5 h-5 text-primaryRed"></i>
+            <span>{{ zone.name|upper }} (₹{{ zone.hourly_rate }}/hour)</span>
+          </div>
+          <span class="badge badge-red text-xs">{{ zone.seats.count }} Seats</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 p-4">
+          {% for seat in zone.seats.all %}
+            <div class="p-3 rounded-xl border {% if seat.is_maintenance %}bg-surface3 border-gray-700 opacity-60{% else %}bg-surface2 border-gridBorder{% endif %} space-y-2">
+              <div class="flex justify-between items-center">
+                <span class="font-mono font-bold text-sm text-white">{{ seat.code }}</span>
+                <span class="badge {% if seat.is_maintenance %}badge-amber{% else %}badge-green{% endif %} text-[9px]">
+                  {% if seat.is_maintenance %}MAINT{% else %}FREE{% endif %}
+                </span>
+              </div>
+              <p class="text-[10px] text-gray-400 truncate">{{ seat.platform.name }}</p>
+              
+              <form method="POST" action="{% url 'staff:toggle_maintenance' seat_id=seat.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary btn-sm w-full text-[9px] py-0.5 justify-center">
+                  {% if seat.is_maintenance %}Restore{% else %}Maint.{% endif %}
+                </button>
+              </form>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

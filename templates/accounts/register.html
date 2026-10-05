@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign Up — Gammers Adda (+100 XP Bonus){% endblock %}
+
+{% block content %}
+<div class="container py-16 max-w-md">
+  <div class="card bg-surface1 border-gridBorder p-8 space-y-6 shadow-2xl">
+    
+    <div class="text-center space-y-2">
+      <span class="badge badge-amber text-[10px]">🎁 BONUS: +100 WELCOME XP</span>
+      <h1 class="heading-1 text-white">JOIN THE SQUAD</h1>
+      <p class="text-xs text-gray-400">Create your gamer profile to unlock instant seat reservations, discounts, and tournament access.</p>
+    </div>
+
+    <form method="POST" class="space-y-4">
+      {% csrf_token %}
+      {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+      {% endif %}
+
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        {{ form.username }}
+        {% if form.username.errors %}<p class="text-xs text-red-400 mt-1">{{ form.username.errors.0 }}</p>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        {{ form.email }}
+        {% if form.email.errors %}<p class="text-xs text-red-400 mt-1">{{ form.email.errors.0 }}</p>{% endif %}
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          {{ form.phone }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Gamer Tag / Handle</label>
+          {{ form.gamer_tag }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        {{ form.password1 }}
+        {% if form.password1.errors %}<p class="text-xs text-red-400 mt-1">{{ form.password1.errors.0 }}</p>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        {{ form.password2 }}
+        {% if form.password2.errors %}<p class="text-xs text-red-400 mt-1">{{ form.password2.errors.0 }}</p>{% endif %}
+      </div>
+
+      {% if form.non_field_errors %}
+        <div class="p-3 rounded-lg bg-red-950/40 border border-red-800 text-xs text-red-300">
+          {{ form.non_field_errors.0 }}
+        </div>
+      {% endif %}
+
+      <button type="submit" class="btn btn-primary w-full py-3 justify-center text-sm font-bold shadow-lg shadow-primaryRed/30">
+        <i data-lucide="sparkles" class="w-4 h-4"></i>
+        <span>CREATE ACCOUNT & CLAIM 100 XP</span>
+      </button>
+    </form>
+
+    <div class="pt-4 border-t border-gridBorder/50 text-center text-xs text-gray-400">
+      Already have an account? <a href="{% url 'accounts:login' %}{% if next %}?next={{ next }}{% endif %}" class="text-primaryRed font-bold hover:underline">Log in here</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

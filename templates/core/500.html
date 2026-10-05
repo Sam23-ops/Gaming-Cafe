@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}500 — Server Glitch | Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-24 text-center max-w-lg space-y-6">
+  <div class="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-surface2 border border-gridBorder text-red-500 shadow-2xl">
+    <i data-lucide="alert-triangle" class="w-12 h-12"></i>
+  </div>
+  <span class="badge badge-red">SERVER EXCEPTION</span>
+  <h1 class="display-title text-white">500: SYSTEM GLITCH</h1>
+  <p class="text-gray-400 text-sm">Our engineering team has received the alert. The server is undergoing emergency diagnostics.</p>
+  <div class="pt-4">
+    <a href="{% url 'core:home' %}" class="btn btn-primary btn-lg">
+      <i data-lucide="home" class="w-4 h-4"></i>
+      <span>RETURN TO ARENA HOME</span>
+    </a>
+  </div>
+</div>
+{% endblock %}

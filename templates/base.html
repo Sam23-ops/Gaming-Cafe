@@ -1,0 +1,325 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Gamer's Adda — Play • Enjoy • Connect{% endblock %}</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="{% static 'images/gamers_adda_logo.png' %}">
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS (Utility classes) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bgMain: '#07080C',
+            surface1: '#0F121A',
+            surface2: '#161B26',
+            surface3: '#1E2536',
+            primaryOrange: '#FF7700',
+            secondaryOrange: '#FF8800',
+            mutedOrange: '#FFAA66',
+            cyanNeon: '#00F0FF',
+            gridBorder: 'rgba(255, 119, 0, 0.3)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Alpine.js -->
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom Design Tokens Stylesheet -->
+  <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-bgMain text-text-main antialiased selection:bg-primaryRed selection:text-white" x-data="{ mobileMenuOpen: false }">
+
+  <!-- Top Announcement Bar (if active) -->
+  {% if ACTIVE_ANNOUNCEMENTS %}
+  <div class="bg-gradient-to-r from-red-950 via-surface2 to-red-950 border-b border-gridBorder text-xs py-1.5 px-4 text-center flex items-center justify-center gap-3">
+    {% for ann in ACTIVE_ANNOUNCEMENTS %}
+      <span class="badge badge-red text-[10px] py-0.5">{{ ann.badge_text }}</span>
+      <span class="font-medium text-gray-200">{{ ann.title }}</span>
+      {% if ann.action_url %}
+        <a href="{{ ann.action_url }}" class="text-primaryRed font-bold hover:underline inline-flex items-center gap-1">{{ ann.action_text }} &rarr;</a>
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Main Navigation Bar -->
+  <header class="navbar">
+    <div class="container flex items-center justify-between h-20">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-6">
+        <a href="{% url 'core:home' %}" class="flex items-center gap-3 group">
+          <img src="{% static 'images/gamers_adda_logo.png' %}" alt="Gamer's Adda" class="h-11 w-11 rounded-xl border border-primary-orange/50 shadow-lg group-hover:scale-105 transition">
+          <div>
+            <span class="text-xl font-black tracking-wider text-white flex items-center gap-1">
+              GAMER'S <span style="color: #FF7700;">ADDA</span>
+            </span>
+            <span class="block text-[10px] font-bold uppercase tracking-widest -mt-1" style="color: #FF8800;">PLAY • ENJOY • CONNECT</span>
+          </div>
+        </a>
+        
+        <!-- Contact Phone -->
+        <a href="tel:+918355923184" class="hidden xl:flex items-center gap-2 bg-surface2/60 px-4 py-2.5 rounded-full border border-gridBorder/40 hover:border-primaryOrange/50 transition group">
+          <i data-lucide="phone" class="w-4 h-4 text-primaryOrange group-hover:scale-110 transition"></i>
+          <div class="flex flex-col">
+            <span class="text-[9px] text-gray-400 uppercase font-semibold">Call Us</span>
+            <span class="text-sm font-bold text-white tracking-wide">+91 8355923184</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Desktop Nav Links -->
+      <nav class="hidden lg:flex items-center gap-1 bg-surface2/60 px-4 py-2 rounded-full border border-gridBorder/40">
+        <a href="{% url 'core:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active text-primaryRed{% endif %}">Home</a>
+        <a href="{% url 'games:games_list' %}" class="nav-link {% if 'games' in request.path %}active text-primaryRed{% endif %}">Games</a>
+        <a href="{% url 'pricing:packages' %}" class="nav-link {% if 'packages' in request.path %}active text-primaryRed{% endif %}">Packages</a>
+        <a href="{% url 'pricing:offers' %}" class="nav-link {% if 'offers' in request.path %}active text-primaryRed{% endif %}">Offers & Deals</a>
+        <a href="{% url 'engagement:events' %}" class="nav-link {% if 'events' in request.path %}active text-primaryRed{% endif %}">Tournaments</a>
+        <a href="{% url 'engagement:gallery' %}" class="nav-link {% if 'gallery' in request.path %}active text-primaryRed{% endif %}">Gallery</a>
+        <a href="{% url 'engagement:reviews' %}" class="nav-link {% if 'reviews' in request.path %}active text-primaryRed{% endif %}">Reviews</a>
+      </nav>
+
+      <!-- Right Action Toolbar -->
+      <div class="flex items-center gap-3">
+        
+        <!-- Persistent Book Now CTA -->
+        <a href="{% url 'bookings:wizard' %}" class="btn btn-primary btn-sm md:btn-md hidden sm:inline-flex shadow-lg shadow-primaryRed/25">
+          <i data-lucide="crosshair" class="w-4 h-4"></i>
+          <span>BOOK NOW</span>
+        </a>
+
+        <!-- User Authentication & Account Dropdown -->
+        {% if user.is_authenticated %}
+          <div class="relative" x-data="{ open: false }">
+            <button @click="open = !open" class="flex items-center gap-2 bg-surface2 hover:bg-surface3 px-3 py-1.5 rounded-full border border-gridBorder transition">
+              <div class="w-7 h-7 rounded-full bg-primaryRed/20 border border-primaryRed text-primaryRed flex items-center justify-center font-bold text-xs">
+                {{ user.gamer_tag|slice:":2"|upper|default:user.username|slice:":2"|upper }}
+              </div>
+              <span class="text-xs font-semibold text-gray-200 hidden md:inline">{{ user.gamer_tag|default:user.username }}</span>
+              <span class="badge badge-amber text-[10px] py-0 px-1.5 hidden sm:inline">💎 {{ user.loyalty_points }} XP</span>
+              <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-400"></i>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 mt-2 w-56 bg-surface1 border border-gridBorder rounded-xl shadow-2xl py-2 z-50">
+              <div class="px-4 py-2 border-b border-gridBorder/40">
+                <p class="text-xs text-mutedRed uppercase font-bold">Signed in as</p>
+                <p class="text-sm font-semibold text-white truncate">{{ user.gamer_tag|default:user.username }}</p>
+                <p class="text-[11px] text-gray-400">{{ user.role.name|default:'Customer' }}</p>
+              </div>
+
+              <a href="{% url 'accounts:dashboard' %}" class="flex items-center gap-2 px-4 py-2 text-xs text-gray-300 hover:bg-surface2 hover:text-white">
+                <i data-lucide="layout-dashboard" class="w-4 h-4 text-primaryRed"></i> My Dashboard
+              </a>
+              <a href="{% url 'bookings:my_bookings' %}" class="flex items-center gap-2 px-4 py-2 text-xs text-gray-300 hover:bg-surface2 hover:text-white">
+                <i data-lucide="ticket" class="w-4 h-4 text-primaryRed"></i> My Bookings
+              </a>
+              <a href="{% url 'accounts:rewards' %}" class="flex items-center gap-2 px-4 py-2 text-xs text-gray-300 hover:bg-surface2 hover:text-white">
+                <i data-lucide="gift" class="w-4 h-4 text-amber-400"></i> Rewards & XP ({{ user.loyalty_points }})
+              </a>
+
+              <!-- Staff link -->
+              {% if IS_STAFF_MEMBER %}
+              <div class="border-t border-gridBorder/40 my-1"></div>
+              <a href="{% url 'staff:live_arena' %}" class="flex items-center gap-2 px-4 py-2 text-xs text-emerald-400 hover:bg-surface2">
+                <i data-lucide="monitor-play" class="w-4 h-4 text-emerald-400"></i> Staff Live Arena
+              </a>
+              <a href="{% url 'staff:qr_scanner' %}" class="flex items-center gap-2 px-4 py-2 text-xs text-emerald-400 hover:bg-surface2">
+                <i data-lucide="scan-line" class="w-4 h-4 text-emerald-400"></i> QR Check-in Terminal
+              </a>
+              {% endif %}
+
+              <!-- Admin link -->
+              {% if IS_ADMIN_MEMBER %}
+              <a href="{% url 'dashboard:admin_dashboard' %}" class="flex items-center gap-2 px-4 py-2 text-xs text-primaryRed hover:bg-surface2 font-bold">
+                <i data-lucide="shield-alert" class="w-4 h-4 text-primaryRed"></i> Admin Portal
+              </a>
+              {% endif %}
+
+              <div class="border-t border-gridBorder/40 my-1"></div>
+              <a href="{% url 'accounts:profile' %}" class="flex items-center gap-2 px-4 py-2 text-xs text-gray-300 hover:bg-surface2">
+                <i data-lucide="user" class="w-4 h-4 text-gray-400"></i> Edit Profile
+              </a>
+              <a href="{% url 'accounts:logout' %}" class="flex items-center gap-2 px-4 py-2 text-xs text-red-400 hover:bg-surface2">
+                <i data-lucide="log-out" class="w-4 h-4 text-red-400"></i> Logout
+              </a>
+            </div>
+          </div>
+        {% else %}
+          <div class="flex items-center gap-2">
+            <a href="{% url 'accounts:login' %}" class="btn btn-secondary btn-sm">Login</a>
+            <a href="{% url 'accounts:register' %}" class="btn btn-outline btn-sm hidden sm:inline-flex">Sign Up</a>
+          </div>
+        {% endif %}
+
+        <!-- Mobile Hamburger Toggle -->
+        <button @click="mobileMenuOpen = !mobileMenuOpen" class="lg:hidden p-2 rounded-lg bg-surface2 border border-gridBorder text-gray-300">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Menu -->
+    <div x-show="mobileMenuOpen" @click.away="mobileMenuOpen = false" x-transition class="lg:hidden bg-surface1 border-b border-gridBorder px-4 py-4 space-y-2">
+      <a href="{% url 'core:home' %}" class="block px-3 py-2 rounded-lg hover:bg-surface2 text-sm font-medium">Home</a>
+      <a href="{% url 'games:games_list' %}" class="block px-3 py-2 rounded-lg hover:bg-surface2 text-sm font-medium">Games Catalogue</a>
+      <a href="{% url 'pricing:packages' %}" class="block px-3 py-2 rounded-lg hover:bg-surface2 text-sm font-medium">Gaming Packages</a>
+      <a href="{% url 'pricing:offers' %}" class="block px-3 py-2 rounded-lg hover:bg-surface2 text-sm font-medium">Offers & Deals</a>
+      <a href="{% url 'engagement:events' %}" class="block px-3 py-2 rounded-lg hover:bg-surface2 text-sm font-medium">Tournaments</a>
+      <a href="{% url 'engagement:gallery' %}" class="block px-3 py-2 rounded-lg hover:bg-surface2 text-sm font-medium">Gallery</a>
+      <a href="{% url 'engagement:reviews' %}" class="block px-3 py-2 rounded-lg hover:bg-surface2 text-sm font-medium">Reviews</a>
+      <a href="{% url 'core:about' %}" class="block px-3 py-2 rounded-lg hover:bg-surface2 text-sm font-medium">About & Specs</a>
+      <a href="{% url 'core:contact' %}" class="block px-3 py-2 rounded-lg hover:bg-surface2 text-sm font-medium">Contact & Location</a>
+      <div class="pt-2">
+        <a href="{% url 'bookings:wizard' %}" class="btn btn-primary w-full justify-center">BOOK SEAT NOW</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Django Flash Messages Toast Container -->
+  <div id="toast-container" class="toast-container">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="toast-alert {% if message.tags == 'error' %}border-l-red-500{% elif message.tags == 'success' %}border-l-emerald-500{% else %}border-l-primaryRed{% endif %}">
+          <div style="flex: 1; font-size: 0.9rem; font-weight: 500;">
+            {{ message }}
+          </div>
+          <button onclick="this.parentElement.remove()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.2rem;">&times;</button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+
+  <!-- Main Body Content -->
+  <main class="flex-grow pb-16 md:pb-0">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-surface1 border-t border-gridBorder mt-20 pt-14 pb-12 text-sm">
+    <div class="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+      
+      <!-- Col 1: Brand -->
+      <div class="lg:col-span-2 space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-primaryRed flex items-center justify-center">
+            <i data-lucide="gamepad-2" class="w-6 h-6 text-white"></i>
+          </div>
+          <span class="text-xl font-black tracking-wider text-white">GAMMERS <span class="text-primaryRed">ADDA</span></span>
+        </div>
+        <p class="text-gray-400 text-xs leading-relaxed max-w-sm">
+          Navi Mumbai's most exciting PlayStation 5 gaming lounge. PS5 on 65" 4K TV, Steering Wheel Sim Racing, premium sofas, and ice-cold refreshments.
+        </p>
+        <div class="flex items-center gap-3 pt-2 text-gray-400">
+          <span class="badge badge-green text-[10px]">● ARENA LIVE NOW</span>
+          <span class="text-xs text-mutedRed">{{ GLOBAL_SETTINGS.OPENING_HOURS }}</span>
+        </div>
+      </div>
+
+      <!-- Col 2: Navigation -->
+      <div class="space-y-3">
+        <h4 class="text-xs font-bold text-mutedRed uppercase tracking-wider">Discovery</h4>
+        <ul class="space-y-2 text-xs text-gray-400">
+          <li><a href="{% url 'games:games_list' %}" class="hover:text-primaryRed transition">All Games</a></li>
+          <li><a href="{% url 'pricing:packages' %}" class="hover:text-primaryRed transition">Gaming Packages</a></li>
+          <li><a href="{% url 'pricing:offers' %}" class="hover:text-primaryRed transition">Offers & Promo Codes</a></li>
+          <li><a href="{% url 'engagement:events' %}" class="hover:text-primaryRed transition">Esports Tournaments</a></li>
+          <li><a href="{% url 'engagement:gallery' %}" class="hover:text-primaryRed transition">Arena Gallery</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 3: Information & Rules -->
+      <div class="space-y-3">
+        <h4 class="text-xs font-bold text-mutedRed uppercase tracking-wider">Venue & Policies</h4>
+        <ul class="space-y-2 text-xs text-gray-400">
+          <li><a href="{% url 'core:about' %}" class="hover:text-primaryRed transition">Hardware & Specs</a></li>
+          <li><a href="{% url 'core:faqs' %}" class="hover:text-primaryRed transition">FAQs & Booking Info</a></li>
+          <li><a href="{% url 'core:rules' %}" class="hover:text-primaryRed transition">Code of Conduct</a></li>
+          <li><a href="{% url 'core:rules' %}" class="hover:text-primaryRed transition">Cancellation & Refund Policy</a></li>
+          <li><a href="{% url 'core:contact' %}" class="hover:text-primaryRed transition">Location & Directions</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 4: Contact & Location -->
+      <div class="space-y-3">
+        <h4 class="text-xs font-bold text-mutedRed uppercase tracking-wider">Get In Touch</h4>
+        <p class="text-xs text-gray-400 flex items-start gap-2">
+          <i data-lucide="map-pin" class="w-4 h-4 flex-shrink-0 mt-0.5" style="color:#FF7700"></i>
+          <span>Shankar Mahadev Apt, Sector 5, Kopar Khairane, Navi Mumbai, Maharashtra 400709</span>
+        </p>
+        <p class="text-xs text-gray-400 flex items-center gap-2">
+          <i data-lucide="phone" class="w-4 h-4 flex-shrink-0" style="color:#FF7700"></i>
+          <span>+91 98765 43210</span>
+        </p>
+        <p class="text-xs text-gray-400 flex items-center gap-2">
+          <i data-lucide="mail" class="w-4 h-4 flex-shrink-0" style="color:#FF7700"></i>
+          <span>gamersadda.koparkh@gmail.com</span>
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Bottom Copyright -->
+    <div class="container border-t border-gridBorder/40 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-4">
+      <p>&copy; 2026 Gammers Adda. All rights reserved. Master Gaming-Cafe Blueprint.</p>
+      <div class="flex items-center gap-4">
+        <span>Designed for Ultra Performance</span>
+        <a href="{% url 'core:rules' %}" class="hover:text-primaryRed">Privacy & Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Mobile Bottom Sticky Action Bar -->
+  <div class="mobile-bottom-bar md:hidden">
+    <a href="{% url 'core:home' %}" class="flex flex-col items-center text-[10px] text-gray-400 hover:text-primaryRed">
+      <i data-lucide="home" class="w-4 h-4 mb-0.5"></i>
+      <span>Home</span>
+    </a>
+    <a href="{% url 'games:games_list' %}" class="flex flex-col items-center text-[10px] text-gray-400 hover:text-primaryRed">
+      <i data-lucide="gamepad-2" class="w-4 h-4 mb-0.5"></i>
+      <span>Games</span>
+    </a>
+    <a href="{% url 'bookings:wizard' %}" class="flex items-center gap-1.5 bg-primaryRed text-white font-bold text-xs px-4 py-1.5 rounded-full shadow-lg shadow-primaryRed/40 -mt-3">
+      <i data-lucide="crosshair" class="w-4 h-4"></i>
+      <span>BOOK</span>
+    </a>
+    <a href="{% url 'pricing:offers' %}" class="flex flex-col items-center text-[10px] text-gray-400 hover:text-primaryRed">
+      <i data-lucide="tag" class="w-4 h-4 mb-0.5"></i>
+      <span>Offers</span>
+    </a>
+    <a href="{% if user.is_authenticated %}{% url 'accounts:dashboard' %}{% else %}{% url 'accounts:login' %}{% endif %}" class="flex flex-col items-center text-[10px] text-gray-400 hover:text-primaryRed">
+      <i data-lucide="user" class="w-4 h-4 mb-0.5"></i>
+      <span>Account</span>
+    </a>
+  </div>
+
+  <!-- Client Script -->
+  <script src="{% static 'js/app.js' %}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

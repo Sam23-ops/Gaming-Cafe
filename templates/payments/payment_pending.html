@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Pending — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-16 max-w-lg text-center space-y-6">
+  
+  <div class="w-16 h-16 rounded-full bg-amber-500/20 border border-amber-500 text-amber-400 flex items-center justify-center mx-auto animate-pulse">
+    <i data-lucide="clock" class="w-8 h-8"></i>
+  </div>
+
+  <span class="badge badge-amber">TRANSACTION PENDING</span>
+  <h1 class="display-title text-white">AWAITING BANK CONFIRMATION</h1>
+  
+  <p class="text-xs text-gray-300 max-w-md mx-auto leading-relaxed">
+    We have received your payment initiation of <strong class="text-white">₹{{ booking.total_amount }}</strong> for Booking <strong class="text-primaryRed font-mono">#{{ booking.booking_reference }}</strong>. The payment gateway is confirming the transaction with your banking provider.
+  </p>
+
+  <div class="p-4 rounded-xl bg-surface2 border border-gridBorder text-left space-y-2 text-xs">
+    <div class="flex justify-between">
+      <span class="text-gray-400">Payment Reference:</span>
+      <span class="text-white font-mono font-bold">{{ payment.payment_reference }}</span>
+    </div>
+    <div class="flex justify-between">
+      <span class="text-gray-400">Status:</span>
+      <span class="text-amber-400 font-bold uppercase">⏳ {{ payment.get_status_display }}</span>
+    </div>
+  </div>
+
+  <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+    <a href="{% url 'payments:checkout' booking_reference=booking.booking_reference %}" class="btn btn-primary w-full sm:w-auto">
+      Refresh / Retry Payment
+    </a>
+    <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary w-full sm:w-auto">
+      Go to Dashboard
+    </a>
+  </div>
+
+</div>
+{% endblock %}

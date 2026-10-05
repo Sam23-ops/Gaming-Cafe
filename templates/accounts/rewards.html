@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Loyalty XP & Rewards — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-12 max-w-4xl space-y-10">
+  
+  <div class="card bg-gradient-to-br from-amber-950/40 via-surface1 to-surface2 border-amber-500/40 p-8 space-y-6">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+      <div class="space-y-2">
+        <span class="badge badge-amber">REWARDS CLUB</span>
+        <h1 class="display-title text-white">GAMER XP: <span class="text-amber-400">💎 {{ user.loyalty_points }}</span></h1>
+        <p class="text-xs text-gray-300">Earn 10 XP for every ₹100 spent. Redeem points at checkout for instant discounts.</p>
+      </div>
+
+      <a href="{% url 'bookings:wizard' %}" class="btn btn-primary">
+        Redeem XP at Checkout &rarr;
+      </a>
+    </div>
+
+    <!-- Referral Program -->
+    <div class="pt-6 border-t border-gridBorder/50 space-y-3">
+      <h3 class="font-bold text-sm text-white">INVITE FRIENDS & EARN +200 XP EACH</h3>
+      <p class="text-xs text-gray-400">Share your referral link. When a friend signs up and books their first session, both of you receive 200 XP.</p>
+      
+      <div class="flex items-center gap-3 max-w-md">
+        <input type="text" readonly value="{{ referral_link }}" id="refLinkInput" class="form-input text-xs font-mono">
+        <button onclick="navigator.clipboard.writeText(document.getElementById('refLinkInput').value); alert('Referral link copied to clipboard!');" class="btn btn-secondary btn-sm flex-shrink-0">
+          <i data-lucide="copy" class="w-4 h-4"></i> Copy
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Points Ledger History -->
+  <div class="space-y-4">
+    <h2 class="heading-2 text-white">XP POINTS TRANSACTION LEDGER</h2>
+    
+    <div class="card p-0 bg-surface1 border-gridBorder overflow-hidden">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date & Time</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>XP Change</th>
+            <th>Balance</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in ledger %}
+            <tr>
+              <td class="text-xs text-gray-400">{{ item.created_at|date:"d M Y, H:i" }}</td>
+              <td>
+                <span class="badge {% if item.transaction_type == 'EARN' %}badge-green{% else %}badge-red{% endif %} text-[9px]">
+                  {{ item.get_transaction_type_display }}
+                </span>
+              </td>
+              <td class="text-xs text-white font-medium">{{ item.reason }}</td>
+              <td class="text-xs font-bold {% if item.points_change > 0 %}text-emerald-400{% else %}text-red-400{% endif %}">
+                {{ item.points_change:+d }} XP
+              </td>
+              <td class="text-xs font-bold text-amber-400 font-mono">{{ item.balance_after }} XP</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" class="text-center py-6 text-xs text-gray-400">No reward points transactions yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

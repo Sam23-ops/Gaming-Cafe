@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}My Bookings — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-12 space-y-8">
+  
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div>
+      <span class="badge badge-red mb-1">RESERVATIONS</span>
+      <h1 class="display-title text-white">MY <span class="text-primaryRed">BOOKINGS</span></h1>
+    </div>
+    <a href="{% url 'bookings:wizard' %}" class="btn btn-primary btn-sm">
+      <i data-lucide="crosshair" class="w-4 h-4"></i>
+      <span>+ New Reservation</span>
+    </a>
+  </div>
+
+  <!-- Upcoming Bookings -->
+  <div class="space-y-4">
+    <h3 class="heading-2 text-white flex items-center gap-2">
+      <i data-lucide="calendar" class="w-5 h-5 text-emerald-400"></i>
+      <span>Upcoming & Active Sessions</span>
+    </h3>
+
+    {% if upcoming_bookings %}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for b in upcoming_bookings %}
+          <div class="card bg-surface1 border-gridBorder hover:border-primaryRed p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs font-bold text-primaryRed">#{{ b.booking_reference }}</span>
+              <span class="badge badge-green text-[10px]">● {{ b.get_status_display }}</span>
+            </div>
+
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between">
+                <span class="text-gray-400">Date & Slot:</span>
+                <strong class="text-white">{{ b.booking_date|date:"D, d M Y" }} @ {{ b.start_time|time:"H:i" }}</strong>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Zone & Seat(s):</span>
+                <span class="text-emerald-400 font-mono font-bold">{{ b.zone.name }} • {{ b.seat_codes_display }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Duration:</span>
+                <span class="text-white">{{ b.duration_hours }} Hour(s)</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Total Paid:</span>
+                <span class="text-primaryRed font-bold text-sm">₹{{ b.total_amount }}</span>
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-gridBorder/40 flex flex-wrap items-center gap-2">
+              <a href="{% url 'bookings:ticket' booking_reference=b.booking_reference %}" class="btn btn-primary btn-sm flex-1 justify-center">
+                <i data-lucide="qr-code" class="w-3.5 h-3.5"></i> QR Ticket
+              </a>
+              <a href="{% url 'bookings:booking_detail' booking_reference=b.booking_reference %}" class="btn btn-secondary btn-sm">
+                Details
+              </a>
+              {% if b.can_reschedule %}
+                <a href="{% url 'bookings:reschedule' booking_reference=b.booking_reference %}" class="btn btn-secondary btn-sm text-[11px]">
+                  Reschedule
+                </a>
+              {% endif %}
+              {% if b.can_cancel %}
+                <a href="{% url 'bookings:cancel' booking_reference=b.booking_reference %}" class="btn btn-outline btn-sm text-[11px] text-red-400 border-red-900 hover:bg-red-950/40">
+                  Cancel
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card bg-surface1 border-gridBorder p-8 text-center text-xs text-gray-400">
+        No active or upcoming bookings found.
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Past Session History -->
+  <div class="space-y-4 pt-6">
+    <h3 class="heading-2 text-white flex items-center gap-2">
+      <i data-lucide="history" class="w-5 h-5 text-gray-400"></i>
+      <span>Past Session History</span>
+    </h3>
+
+    {% if past_bookings %}
+      <div class="card p-0 bg-surface1 border-gridBorder overflow-x-auto">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Date</th>
+              <th>Zone & Seats</th>
+              <th>Duration</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in past_bookings %}
+              <tr>
+                <td class="font-mono text-xs text-gray-300 font-bold">#{{ b.booking_reference }}</td>
+                <td class="text-xs text-white">{{ b.booking_date|date:"d M Y" }}</td>
+                <td class="text-xs text-emerald-400 font-mono">{{ b.zone.name }} • {{ b.seat_codes_display }}</td>
+                <td class="text-xs text-gray-300">{{ b.duration_hours }}h</td>
+                <td class="text-xs font-bold text-white">₹{{ b.total_amount }}</td>
+                <td>
+                  <span class="badge {% if b.status == 'COMPLETED' %}badge-green{% elif b.status == 'REFUNDED' %}badge-amber{% else %}badge-red{% endif %} text-[9px]">
+                    {{ b.get_status_display }}
+                  </span>
+                </td>
+                <td>
+                  <div class="flex items-center gap-2">
+                    <a href="{% url 'bookings:booking_detail' booking_reference=b.booking_reference %}" class="text-xs text-primaryRed hover:underline font-bold">
+                      View
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-xs text-gray-400">No past bookings record.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

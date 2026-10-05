@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Payments & Financial Ledger — Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container py-10 space-y-8">
+  
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div>
+      <span class="badge badge-green mb-1">FINANCIAL LEDGER</span>
+      <h1 class="display-title text-white">PAYMENTS & <span class="text-primaryRed">REFUNDS</span></h1>
+    </div>
+    <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+  </div>
+
+  <!-- Financial Scorecard -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+    <div class="card bg-surface1 border-gridBorder p-5 space-y-1">
+      <span class="text-xs text-mutedRed font-bold uppercase">Gross Collected</span>
+      <div class="text-3xl font-black text-emerald-400">₹{{ total_collected|floatformat:2 }}</div>
+    </div>
+    <div class="card bg-surface1 border-gridBorder p-5 space-y-1">
+      <span class="text-xs text-mutedRed font-bold uppercase">Total Refunded</span>
+      <div class="text-3xl font-black text-amber-400">₹{{ total_refunded|floatformat:2 }}</div>
+    </div>
+    <div class="card bg-surface1 border-gridBorder p-5 space-y-1">
+      <span class="text-xs text-mutedRed font-bold uppercase">Net Revenue</span>
+      <div class="text-3xl font-black text-white">₹{{ net_revenue|floatformat:2 }}</div>
+    </div>
+  </div>
+
+  <!-- Payments Table -->
+  <div class="card p-0 bg-surface1 border-gridBorder overflow-x-auto shadow-2xl">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Payment Ref</th>
+          <th>Booking Ref</th>
+          <th>Customer</th>
+          <th>Amount</th>
+          <th>Method</th>
+          <th>Status</th>
+          <th>Paid Timestamp</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in payments %}
+          <tr>
+            <td class="font-mono text-xs font-bold text-white">{{ p.payment_reference }}</td>
+            <td class="font-mono text-xs text-primaryRed">#{{ p.booking.booking_reference }}</td>
+            <td class="text-xs text-gray-300 font-semibold">{{ p.booking.customer_name }}</td>
+            <td class="text-xs font-bold text-white">₹{{ p.amount }}</td>
+            <td class="text-xs text-gray-400">{{ p.get_payment_method_display }}</td>
+            <td>
+              <span class="badge {% if p.status == 'SUCCESS' %}badge-green{% elif p.status == 'REFUNDED' %}badge-amber{% else %}badge-red{% endif %} text-[9px]">
+                {{ p.get_status_display }}
+              </span>
+            </td>
+            <td class="text-xs text-gray-400">{{ p.created_at|date:"d M Y, H:i" }}</td>
+            <td>
+              {% if p.status == 'SUCCESS' %}
+                <form method="POST" action="{% url 'payments:admin_refund' payment_id=p.id %}" onsubmit="return confirm('Are you sure you want to refund ₹{{ p.amount }} for Booking #{{ p.booking.booking_reference }}?');">
+                  {% csrf_token %}
+                  <input type="hidden" name="reason" value="Administrative refund by staff/finance">
+                  <input type="hidden" name="amount" value="{{ p.amount }}">
+                  <button type="submit" class="btn btn-outline btn-sm text-[9px] py-0.5 px-2 text-red-400 border-red-900 hover:bg-red-950/40">
+                    Issue Refund
+                  </button>
+                </form>
+              {% else %}
+                <span class="text-[11px] text-gray-500">—</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="8" class="text-center py-8 text-xs text-gray-400">No payment records found.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

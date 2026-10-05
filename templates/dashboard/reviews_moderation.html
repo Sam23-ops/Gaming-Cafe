@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Reviews Moderation — Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container py-10 space-y-8">
+  
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div>
+      <span class="badge badge-amber mb-1">FEEDBACK MODERATION</span>
+      <h1 class="display-title text-white">PLAYER <span class="text-primaryRed">REVIEWS</span></h1>
+    </div>
+    <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+  </div>
+
+  <div class="space-y-4">
+    {% for review in reviews %}
+      <div class="card bg-surface1 border-gridBorder p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-gridBorder/40">
+          <div class="flex items-center gap-3">
+            <strong class="text-white text-sm font-bold">{{ review.user.gamer_tag|default:review.user.username }}</strong>
+            <span class="text-amber-400 text-xs">
+              {% for i in "12345"|make_list %}
+                {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+              {% endfor %}
+            </span>
+            {% if review.is_verified_booking %}
+              <span class="badge badge-green text-[9px]">VERIFIED</span>
+            {% endif %}
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="badge {% if review.status == 'APPROVED' %}badge-green{% elif review.status == 'PENDING' %}badge-amber{% else %}badge-red{% endif %} text-[9px]">
+              {{ review.get_status_display }}
+            </span>
+            <span class="text-[10px] text-gray-500">{{ review.created_at|date:"d M Y, H:i" }}</span>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-sm text-white">{{ review.title }}</h4>
+          <p class="text-xs text-gray-300 mt-1 leading-relaxed">{{ review.comment }}</p>
+        </div>
+
+        {% if review.admin_response %}
+          <div class="p-3 rounded-lg bg-surface2 border-l-2 border-primaryRed text-xs">
+            <span class="font-bold text-primaryRed text-[10px] block">Current Admin Response:</span>
+            <p class="text-gray-300">{{ review.admin_response }}</p>
+          </div>
+        {% endif %}
+
+        <!-- Moderation & Response Form -->
+        <div class="pt-3 border-t border-gridBorder/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <form method="POST" class="flex items-center gap-2">
+            {% csrf_token %}
+            <input type="hidden" name="review_id" value="{{ review.id }}">
+            
+            {% if review.status != 'APPROVED' %}
+              <button type="submit" name="action" value="APPROVE" class="btn btn-primary btn-sm text-[10px] py-1 px-3">
+                Approve & Publish
+              </button>
+            {% endif %}
+
+            {% if review.status != 'REJECTED' %}
+              <button type="submit" name="action" value="REJECT" class="btn btn-outline btn-sm text-[10px] py-1 px-3 text-red-400 border-red-900">
+                Reject
+              </button>
+            {% endif %}
+          </form>
+
+          <!-- Official Reply Input -->
+          <form method="POST" class="flex gap-2 w-full sm:w-auto">
+            {% csrf_token %}
+            <input type="hidden" name="review_id" value="{{ review.id }}">
+            <input type="hidden" name="action" value="REPLY">
+            <input type="text" name="admin_response" placeholder="Post official reply..." class="form-input text-xs py-1">
+            <button type="submit" class="btn btn-secondary btn-sm text-[10px] flex-shrink-0">Reply</button>
+          </form>
+        </div>
+      </div>
+    {% empty %}
+      <div class="card bg-surface1 border-gridBorder p-12 text-center text-xs text-gray-400">
+        No reviews in the moderation queue.
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

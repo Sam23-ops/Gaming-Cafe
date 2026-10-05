@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Fast Walk-In Terminal — Gammers Adda Staff{% endblock %}
+
+{% block content %}
+<div class="container py-12 max-w-2xl">
+  <div class="card bg-surface1 border-gridBorder p-8 space-y-6 shadow-2xl">
+    
+    <div class="space-y-1">
+      <span class="badge badge-red">FAST DESK DISPATCH</span>
+      <h1 class="heading-1 text-white">30-SECOND WALK-IN ENTRY</h1>
+      <p class="text-xs text-gray-400">Quickly allocate a free seat, collect cash/card payment, and initiate live arena session timer.</p>
+    </div>
+
+    <form method="POST" class="space-y-4">
+      {% csrf_token %}
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="form-group">
+          <label class="form-label">Customer Name</label>
+          <input type="text" name="customer_name" required placeholder="e.g. Rahul Sharma" class="form-input text-xs">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input type="text" name="customer_phone" required placeholder="e.g. 9876543210" class="form-input text-xs">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="form-group">
+          <label class="form-label">Select Zone</label>
+          <select name="zone_id" id="walkinZoneSelect" required class="form-select text-xs">
+            {% for zone in zones %}
+              <option value="{{ zone.id }}">{{ zone.name }} (₹{{ zone.hourly_rate }}/h)</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Select Free Seat</label>
+          <select name="seat_id" required class="form-select text-xs font-mono">
+            {% for zone in zones %}
+              <optgroup label="{{ zone.name }}">
+                {% for seat in zone.seats.all %}
+                  {% if not seat.is_maintenance and seat.status == 'AVAILABLE' %}
+                    <option value="{{ seat.id }}">{{ seat.code }} ({{ seat.platform.name }})</option>
+                  {% endif %}
+                {% endfor %}
+              </optgroup>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="form-group">
+          <label class="form-label">Duration</label>
+          <select name="duration_hours" class="form-select text-xs">
+            <option value="1.0">1 Hour</option>
+            <option value="2.0">2 Hours</option>
+            <option value="3.0">3 Hours</option>
+            <option value="4.0">4 Hours</option>
+            <option value="8.0">All-Night Pass</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Payment Collection</label>
+          <select name="payment_method" class="form-select text-xs font-bold text-emerald-400">
+            <option value="CASH">💵 Cash on Counter</option>
+            <option value="UPI">📱 Counter UPI QR</option>
+            <option value="CARD">💳 POS Card Swipe</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-gridBorder/50 flex items-center justify-between">
+        <a href="{% url 'staff:live_arena' %}" class="btn btn-secondary">Back to Live Arena</a>
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="zap" class="w-4 h-4"></i>
+          <span>Confirm & Start Session Now</span>
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

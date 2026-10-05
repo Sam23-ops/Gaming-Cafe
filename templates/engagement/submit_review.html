@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Write a Review — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-12 max-w-xl">
+  <div class="card bg-surface1 border-gridBorder p-8 space-y-6">
+    
+    <div class="space-y-1">
+      <span class="badge badge-red">FEEDBACK & RATING</span>
+      <h1 class="heading-1 text-white">SHARE YOUR EXPERIENCE</h1>
+      <p class="text-xs text-gray-400">Rate our rigs, monitors, ambience, and staff hospitality.</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-5">
+      {% csrf_token %}
+
+      {% if user_bookings %}
+        <div class="form-group">
+          <label class="form-label">Link to your Booking</label>
+          <select name="booking_id" class="form-select text-xs">
+            <option value="">General Review</option>
+            {% for b in user_bookings %}
+              <option value="{{ b.id }}">#{{ b.booking_reference }} — {{ b.zone.name }} ({{ b.booking_date|date:"d M" }})</option>
+            {% endfor %}
+          </select>
+        </div>
+      {% endif %}
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-group">
+          <label class="form-label">Overall Rating (1 to 5 Stars)</label>
+          <select name="rating" class="form-select text-xs">
+            <option value="5">★★★★★ 5 Stars (Legendary)</option>
+            <option value="4">★★★★☆ 4 Stars (Great)</option>
+            <option value="3">★★★☆☆ 3 Stars (Average)</option>
+            <option value="2">★★☆☆☆ 2 Stars (Needs Improvement)</option>
+            <option value="1">★☆☆☆☆ 1 Star (Poor)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Hardware & Rig Quality</label>
+          <select name="hardware_rating" class="form-select text-xs">
+            <option value="5">5 / 5 (Ultra 240FPS)</option>
+            <option value="4">4 / 5</option>
+            <option value="3">3 / 5</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Review Headline</label>
+        <input type="text" name="title" required placeholder="e.g. Best 240Hz RTX 4090 Arena in Bangalore!" class="form-input text-xs">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Detailed Feedback</label>
+        <textarea name="comment" rows="4" required placeholder="Tell other gamers about the ping, atmosphere, peripherals..." class="form-input text-xs"></textarea>
+      </div>
+
+      <div class="pt-4 border-t border-gridBorder/50 flex items-center justify-between">
+        <a href="{% url 'engagement:reviews' %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Publish Review</button>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

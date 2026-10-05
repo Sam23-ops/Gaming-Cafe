@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ game.title }} — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-12 space-y-12">
+  
+  <!-- Breadcrumb -->
+  <div class="flex items-center gap-2 text-xs text-gray-400">
+    <a href="{% url 'core:home' %}" class="hover:text-primaryRed">Home</a>
+    <span>/</span>
+    <a href="{% url 'games:games_list' %}" class="hover:text-primaryRed">Games</a>
+    <span>/</span>
+    <span class="text-white font-bold">{{ game.title }}</span>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+    
+    <!-- Cover & Quick Specs -->
+    <div class="lg:col-span-4 space-y-6">
+      <div class="card p-0 bg-surface1 border-gridBorder overflow-hidden shadow-2xl">
+        <div class="aspect-[3/4] relative">
+          <img src="{{ game.display_image }}" alt="{{ game.title }}" class="w-full h-full object-cover">
+          <div class="absolute top-3 right-3 badge badge-amber text-xs font-bold shadow-lg">
+            ★ {{ game.rating }}
+          </div>
+        </div>
+        <div class="p-6 space-y-4">
+          {% if game.is_available %}
+            <a href="{% url 'bookings:wizard' %}?game={{ game.id }}" class="btn btn-primary w-full py-3 justify-center text-sm font-bold shadow-lg shadow-primaryRed/30">
+              <i data-lucide="crosshair" class="w-4 h-4"></i>
+              <span>BOOK SEAT TO PLAY THIS</span>
+            </a>
+          {% else %}
+            <div class="p-3 bg-red-950/40 border border-red-800 rounded-lg text-center text-xs text-red-300 font-bold">
+              🛠 Game is undergoing patch / server update.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Quick Specs -->
+      <div class="card bg-surface2 border-gridBorder p-5 space-y-3 text-xs">
+        <h4 class="font-bold text-mutedRed uppercase tracking-wider">GAME INFORMATION</h4>
+        <div class="flex justify-between py-1 border-b border-gridBorder/40">
+          <span class="text-gray-400">Genre</span>
+          <span class="text-white font-medium">{{ game.genre.name|default:'Action' }}</span>
+        </div>
+        <div class="flex justify-between py-1 border-b border-gridBorder/40">
+          <span class="text-gray-400">Player Mode</span>
+          <span class="text-white font-medium">{{ game.get_player_mode_display }}</span>
+        </div>
+        <div class="flex justify-between py-1 border-b border-gridBorder/40">
+          <span class="text-gray-400">Developer</span>
+          <span class="text-white font-medium">{{ game.developer|default:'AAA Studios' }}</span>
+        </div>
+        <div class="flex justify-between py-1 border-b border-gridBorder/40">
+          <span class="text-gray-400">Release Year</span>
+          <span class="text-white font-medium">{{ game.release_year }}</span>
+        </div>
+        <div class="flex justify-between py-1">
+          <span class="text-gray-400">Status</span>
+          <span class="{% if game.is_available %}text-emerald-400{% else %}text-red-400{% endif %} font-bold">
+            {% if game.is_available %}● Ready to Play{% else %}● Maintenance{% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Game Details -->
+    <div class="lg:col-span-8 space-y-8">
+      <div>
+        <div class="flex flex-wrap items-center gap-2 mb-3">
+          {% for p in game.platforms.all %}
+            <span class="badge badge-red text-[10px]">{{ p.name }}</span>
+          {% endfor %}
+          {% if game.is_new_release %}
+            <span class="badge badge-green text-[10px]">NEW RELEASE</span>
+          {% endif %}
+        </div>
+        <h1 class="display-title text-white">{{ game.title }}</h1>
+        {% if game.tagline %}
+          <p class="text-lg text-primaryRed font-medium mt-1">{{ game.tagline }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Description -->
+      <div class="card bg-surface1 border-gridBorder p-6 space-y-4">
+        <h3 class="heading-2 text-white">ABOUT THE GAME</h3>
+        <p class="text-sm text-gray-300 leading-relaxed">{{ game.description }}</p>
+      </div>
+
+      <!-- Arena Optimization Specs -->
+      <div class="card bg-surface2 border-gridBorder p-6 space-y-3">
+        <h3 class="font-bold text-sm text-white flex items-center gap-2">
+          <i data-lucide="zap" class="w-4 h-4 text-primaryRed"></i>
+          <span>GAMMERS ADDA OPTIMIZATION SPECIFICATION</span>
+        </h3>
+        <p class="text-xs text-gray-300 leading-relaxed">{{ game.system_requirements }}</p>
+      </div>
+
+      <!-- Screenshots Gallery -->
+      {% if game.screenshots.all %}
+        <div class="space-y-4">
+          <h3 class="heading-2 text-white">GAME SCREENSHOTS</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {% for sc in game.screenshots.all %}
+              <div class="rounded-xl overflow-hidden bg-surface2 border border-gridBorder aspect-video">
+                <img src="{{ sc.display_url }}" alt="{{ sc.caption|default:game.title }}" class="w-full h-full object-cover hover:scale-105 transition duration-300">
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Related Games -->
+      {% if related_games %}
+        <div class="space-y-4 pt-4 border-t border-gridBorder/40">
+          <h3 class="heading-2 text-white">MORE IN {{ game.genre.name|upper }}</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {% for rg in related_games %}
+              <a href="{% url 'games:game_detail' slug=rg.slug %}" class="card bg-surface1 border-gridBorder hover:border-primaryRed p-2 group">
+                <div class="aspect-[3/4] rounded-lg overflow-hidden mb-2 bg-surface2">
+                  <img src="{{ rg.display_image }}" alt="{{ rg.title }}" class="w-full h-full object-cover group-hover:scale-105 transition">
+                </div>
+                <h4 class="text-xs font-bold text-white truncate group-hover:text-primaryRed">{{ rg.title }}</h4>
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

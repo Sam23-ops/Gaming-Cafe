@@ -1,0 +1,580 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Book a Seat — Gammers Adda Interactive Arena{% endblock %}
+
+{% block content %}
+<div class="container py-10" x-data="bookingWizard()">
+  
+  <!-- Wizard Header -->
+  <div class="mb-8 space-y-2">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface2 border border-gridBorder text-xs text-mutedRed">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span>REAL-TIME SEAT INVENTORY</span>
+    </div>
+    <h1 class="display-title text-white">RESERVE YOUR <span class="text-primaryRed">BATTLE STATION</span></h1>
+    <p class="text-xs md:text-sm text-gray-400">Select your date, preferred gaming zone, seat on the arena map, and lock in your session.</p>
+  </div>
+
+  <form method="POST" action="{% url 'bookings:wizard' %}" id="bookingForm" @submit="validateBeforeSubmit($event)">
+    {% csrf_token %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- Main Progressive Wizard Steps (Left 8 Cols) -->
+      <div class="lg:col-span-8 space-y-8">
+        
+        <!-- STEP 1: Date, Start Time & Duration -->
+        <div class="card bg-surface1 border-gridBorder p-6 space-y-5">
+          <div class="flex items-center gap-3 pb-3 border-b border-gridBorder/40">
+            <span class="w-7 h-7 rounded-full bg-primaryRed text-white text-xs font-black flex items-center justify-center">1</span>
+            <h3 class="font-bold text-base text-white">CHOOSE DATE & TIME SLOT</h3>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <!-- Date Picker -->
+            <div class="form-group mb-0">
+              <label class="form-label">Booking Date</label>
+              <input type="date" name="booking_date" x-model="bookingDate" min="{{ today_str }}" @change="fetchSeatAvailability()" required class="form-input text-xs font-semibold">
+            </div>
+
+            <!-- Start Time -->
+            <div class="form-group mb-0">
+              <label class="form-label">Start Time</label>
+              <select name="start_time" x-model="startTime" @change="fetchSeatAvailability()" required class="form-select text-xs font-semibold">
+                <option value="10:00">10:00 AM</option>
+                <option value="11:00">11:00 AM</option>
+                <option value="12:00">12:00 PM</option>
+                <option value="13:00">01:00 PM</option>
+                <option value="14:00">02:00 PM</option>
+                <option value="15:00">03:00 PM</option>
+                <option value="16:00">04:00 PM</option>
+                <option value="17:00">05:00 PM</option>
+                <option value="18:00">06:00 PM (Peak)</option>
+                <option value="19:00">07:00 PM (Peak)</option>
+                <option value="20:00">08:00 PM (Peak)</option>
+                <option value="21:00">09:00 PM (Peak)</option>
+                <option value="22:00">10:00 PM (All-Night)</option>
+                <option value="23:00">11:00 PM</option>
+              </select>
+            </div>
+
+            <!-- Duration -->
+            <div class="form-group mb-0">
+              <label class="form-label">Duration</label>
+              <select name="duration_hours" x-model="durationHours" @change="fetchSeatAvailability(); recalculatePrice();" required class="form-select text-xs font-semibold">
+                <option value="1.0">1 Hour</option>
+                <option value="2.0">2 Hours</option>
+                <option value="3.0">3 Hours (Popular)</option>
+                <option value="4.0">4 Hours</option>
+                <option value="6.0">6 Hours (Half-Day)</option>
+                <option value="8.0">8 Hours (All-Night Pass)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: Zone & Platform Selection -->
+        <div class="card bg-surface1 border-gridBorder p-6 space-y-5">
+          <div class="flex items-center gap-3 pb-3 border-b border-gridBorder/40">
+            <span class="w-7 h-7 rounded-full bg-primaryRed text-white text-xs font-black flex items-center justify-center">2</span>
+            <h3 class="font-bold text-base text-white">SELECT GAMING ZONE</h3>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {% for zone in zones %}
+              <button type="button" 
+                      @click="selectZone({{ zone.id }}, '{{ zone.name }}', {{ zone.hourly_rate }})"
+                      :class="selectedZoneId == {{ zone.id }} ? 'border-primaryRed bg-surface3 shadow-lg shadow-primaryRed/20 ring-1 ring-primaryRed' : 'border-gridBorder/50 bg-surface2 hover:border-primaryRed/60'"
+                      class="p-4 rounded-xl border text-left transition-all space-y-2 relative">
+                <div class="flex items-center justify-between">
+                  <i data-lucide="{{ zone.icon }}" class="w-5 h-5 text-primaryRed"></i>
+                  <span class="text-[10px] font-bold text-emerald-400">₹{{ zone.hourly_rate|floatformat:0 }}/h</span>
+                </div>
+                <div>
+                  <h4 class="font-bold text-xs text-white">{{ zone.name }}</h4>
+                  <p class="text-[10px] text-gray-400">{{ zone.seats.count }} Seats</p>
+                </div>
+              </button>
+            {% endfor %}
+          </div>
+          <input type="hidden" name="zone_id" x-model="selectedZoneId">
+        </div>
+
+        <!-- STEP 3: Arena Blueprint (Display Only) + Seat Selection -->
+        <div class="card bg-surface1 border-gridBorder p-6 space-y-5">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 border-b border-gridBorder/40 gap-3">
+            <div class="flex items-center gap-3">
+              <span class="w-7 h-7 rounded-full bg-primaryRed text-white text-xs font-black flex items-center justify-center">3</span>
+              <div>
+                <h3 class="font-bold text-base text-white">ARENA FLOOR MAP</h3>
+                <p class="text-[11px] text-gray-400">Cafe layout — select your station below</p>
+              </div>
+            </div>
+            <!-- Legend -->
+            <div class="flex flex-wrap items-center gap-3 text-[10px] text-gray-300">
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-lime-400/80 border border-lime-500"></span> Available</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-orange-500 border border-white"></span> Selected</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-red-900/60 border border-red-500"></span> Occupied</span>
+            </div>
+          </div>
+
+          <!-- Display-only Blueprint Map -->
+          <div class="relative w-full h-[460px] bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl border-2 border-gridBorder/60 overflow-hidden" style="background-image: repeating-linear-gradient(0deg, rgba(255,119,0,0.03) 0px, transparent 1px, transparent 20px, rgba(255,119,0,0.03) 21px), repeating-linear-gradient(90deg, rgba(255,119,0,0.03) 0px, transparent 1px, transparent 20px, rgba(255,119,0,0.03) 21px);">
+
+            <!-- TOP LEFT: RESTRICTED -->
+            <div class="absolute top-3 left-3 px-3 py-1.5 rounded-lg font-bold text-[10px]" style="background:linear-gradient(135deg,#FF8800,#FF5500);color:white;box-shadow:0 0 12px rgba(255,119,0,0.5);">
+              ⚠️ RESTRICTED
+            </div>
+
+            <!-- TOP CENTER: Label -->
+            <div class="absolute top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold text-orange-400 tracking-widest">
+              PS3 + TV3*
+            </div>
+
+            <!-- TOP CENTER: Sofa 3* (PS5-03) — horizontal -->
+            <template x-for="seat in seats.filter(s => s.code === 'PS5-03')" :key="seat.id">
+              <div class="absolute top-12 left-1/2 -translate-x-1/2 w-40 h-14 rounded-lg border-2 flex flex-col items-center justify-center text-xs font-bold shadow-xl pointer-events-none"
+                   :class="{
+                     'bg-lime-400/90 border-lime-500': seat.status === 'AVAILABLE' && !isSeatSelected(seat.id),
+                     'bg-orange-500 border-white ring-4 ring-orange-400': isSeatSelected(seat.id),
+                     'bg-red-900/60 border-red-500 opacity-60': seat.status === 'OCCUPIED',
+                     'bg-gray-700 border-gray-500 opacity-50': seat.status === 'MAINTENANCE'
+                   }">
+                <div class="text-slate-900 font-mono" x-text="seat.code"></div>
+                <div class="text-[9px] text-slate-800">Sofa 3* — PS5</div>
+                <div class="text-[9px] font-bold" :class="seat.status==='AVAILABLE'?'text-emerald-700':'text-red-700'" x-text="seat.status === 'AVAILABLE' ? '₹60/hr — FREE' : seat.status"></div>
+              </div>
+            </template>
+            <div class="absolute top-14 left-3 w-14 h-20 bg-pink-400/80 border-2 border-pink-500 rounded-lg flex flex-col items-center justify-center text-[9px] text-white font-bold shadow-lg">
+              <div class="text-xl">🧊</div>
+              <div class="mt-1">Fridge</div>
+            </div>
+
+            <!-- LEFT: PC TABLE -->
+            <div class="absolute bottom-24 left-3 w-20 h-28 bg-gray-100 border-2 border-gray-400 rounded-lg flex flex-col items-center justify-center text-[9px] text-gray-700 font-bold shadow-lg">
+              <div class="text-lg">🖥️</div>
+              <div class="mt-1">PC Table</div>
+              <div class="flex gap-1 mt-2">
+                <div class="w-3.5 h-3.5 bg-lime-400 rounded border border-lime-600"></div>
+                <div class="w-3.5 h-3.5 bg-lime-400 rounded border border-lime-600"></div>
+              </div>
+            </div>
+
+            <!-- RIGHT TOP: Dark circle -->
+            <div class="absolute top-16 right-10 w-10 h-10 bg-slate-900 border-2 border-slate-700 rounded-full"></div>
+
+            <!-- CENTER-RIGHT TOP: Sofa 2 (PS5-02) — vertical PS5 -->
+            <template x-for="seat in seats.filter(s => s.code === 'PS5-02')" :key="seat.id">
+              <div class="absolute top-[20%] right-28 w-20 h-28 rounded-lg border-2 flex flex-col items-center justify-center text-xs font-bold shadow-xl pointer-events-none"
+                   :class="{
+                     'bg-lime-400/90 border-lime-500': seat.status === 'AVAILABLE' && !isSeatSelected(seat.id),
+                     'bg-orange-500 border-white ring-4 ring-orange-400': isSeatSelected(seat.id),
+                     'bg-red-900/60 border-red-500 opacity-60': seat.status === 'OCCUPIED',
+                     'bg-gray-700 border-gray-500 opacity-50': seat.status === 'MAINTENANCE'
+                   }">
+                <div class="text-slate-900 font-mono text-xs" x-text="seat.code"></div>
+                <div class="text-[9px] text-slate-800">Sofa 2</div>
+                <div class="text-[9px] text-slate-800">🎮 PS5</div>
+                <div class="text-[9px] font-bold" :class="seat.status==='AVAILABLE'?'text-emerald-700':'text-red-700'" x-text="seat.status === 'AVAILABLE' ? '₹60/hr' : seat.status"></div>
+              </div>
+            </template>
+
+            <!-- CENTER-RIGHT MID: SIM-01 — Steering Wheel Sim -->
+            <template x-for="seat in seats.filter(s => s.code === 'SIM-01')" :key="seat.id">
+              <div class="absolute top-[48%] right-28 w-20 h-28 rounded-lg border-2 flex flex-col items-center justify-center text-xs font-bold shadow-xl pointer-events-none"
+                   :class="{
+                     'bg-lime-400/90 border-lime-500': seat.status === 'AVAILABLE' && !isSeatSelected(seat.id),
+                     'bg-orange-500 border-white ring-4 ring-orange-400': isSeatSelected(seat.id),
+                     'bg-red-900/60 border-red-500 opacity-60': seat.status === 'OCCUPIED',
+                     'bg-gray-700 border-gray-500 opacity-50': seat.status === 'MAINTENANCE'
+                   }">
+                <div class="text-slate-900 font-mono text-xs" x-text="seat.code"></div>
+                <div class="text-[9px] text-slate-800">Sofa Sim</div>
+                <div class="text-[9px] text-amber-700 font-bold">🏎️ Sim</div>
+                <div class="text-[9px] font-bold" :class="seat.status==='AVAILABLE'?'text-emerald-700':'text-red-700'" x-text="seat.status === 'AVAILABLE' ? '₹80/hr' : seat.status"></div>
+              </div>
+            </template>
+
+            <!-- BOTTOM-RIGHT: Sofa 1 (PS5-01) — vertical -->
+            <template x-for="seat in seats.filter(s => s.code === 'PS5-01')" :key="seat.id">
+              <div class="absolute bottom-28 right-28 w-20 h-28 rounded-lg border-2 flex flex-col items-center justify-center text-xs font-bold shadow-xl pointer-events-none"
+                   :class="{
+                     'bg-lime-400/90 border-lime-500': seat.status === 'AVAILABLE' && !isSeatSelected(seat.id),
+                     'bg-orange-500 border-white ring-4 ring-orange-400': isSeatSelected(seat.id),
+                     'bg-red-900/60 border-red-500 opacity-60': seat.status === 'OCCUPIED',
+                     'bg-gray-700 border-gray-500 opacity-50': seat.status === 'MAINTENANCE'
+                   }">
+                <div class="text-slate-900 font-mono text-xs" x-text="seat.code"></div>
+                <div class="text-[9px] text-slate-800">Sofa 1</div>
+                <div class="text-[9px] font-bold" :class="seat.status==='AVAILABLE'?'text-emerald-700':'text-red-700'" x-text="seat.status === 'AVAILABLE' ? '₹60/hr' : seat.status"></div>
+              </div>
+            </template>
+
+            <!-- RIGHT WALL: PS labels -->
+            <div class="absolute top-1/2 right-2 -translate-y-1/2 text-[9px] font-bold text-gray-400 text-center leading-tight">
+              <div>PS2</div><div class="mt-1">PS1/</div><div>TV1</div>
+            </div>
+
+            <!-- BOTTOM CENTER: Black block -->
+            <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-36 h-20 bg-black border-2 border-gray-700 rounded-lg"></div>
+
+            <!-- BOTTOM LEFT: Entrance -->
+            <div class="absolute bottom-2 left-2 px-5 py-1.5 bg-amber-100 border-2 border-amber-400 rounded-t-lg text-[10px] font-bold text-amber-900 shadow">
+              🚪 MAIN Entrance
+            </div>
+
+            <!-- BOTTOM RIGHT: Supervisor -->
+            <div class="absolute bottom-2 right-2 w-22 h-14 bg-lime-400/90 border-2 border-lime-600 rounded-lg flex items-center justify-center text-[9px] text-slate-900 font-bold shadow px-2">
+              <div class="text-center">
+                <div>📋 Main table</div>
+                <div class="text-[8px]">Supervisor</div>
+              </div>
+            </div>
+
+            <!-- Orange dots (right wall indicators) -->
+            <div class="absolute top-8 right-3 w-2.5 h-2.5 bg-orange-500 rounded-full"></div>
+            <div class="absolute bottom-20 right-3 w-2.5 h-2.5 bg-orange-500 rounded-full"></div>
+
+          </div>
+
+          <!-- Seat Picker (replaces clicking on map) -->
+          <div class="space-y-3 pt-2">
+            <p class="text-xs font-bold text-gray-300 uppercase tracking-wider">Choose Your Station:</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" x-show="seats.length > 0">
+              <template x-for="seat in seats" :key="seat.id">
+                <button type="button"
+                        @click="toggleSeat(seat)"
+                        :disabled="seat.status === 'OCCUPIED' || seat.status === 'MAINTENANCE'"
+                        :class="{
+                          'border-orange-500 bg-surface3 ring-2 ring-orange-400': isSeatSelected(seat.id),
+                          'border-gridBorder/50 bg-surface2 hover:border-orange-400': seat.status === 'AVAILABLE' && !isSeatSelected(seat.id),
+                          'opacity-40 cursor-not-allowed border-red-900 bg-surface2': seat.status === 'OCCUPIED' || seat.status === 'MAINTENANCE'
+                        }"
+                        class="flex items-center gap-3 p-3 rounded-xl border transition text-left">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black"
+                       :class="isSeatSelected(seat.id) ? 'bg-orange-500 text-white' : 'bg-surface1 text-orange-400'">
+                    <span x-text="seat.code === 'SIM-01' ? '🏎️' : '🎮'"></span>
+                  </div>
+                  <div>
+                    <div class="text-xs font-bold text-white" x-text="seat.code"></div>
+                    <div class="text-[10px] text-gray-400" x-text="seat.code === 'SIM-01' ? 'Sim Racing · ₹80/hr' : 'PS5 Console · ₹60/hr'"></div>
+                    <div class="text-[10px] font-semibold"
+                         :class="seat.status === 'AVAILABLE' ? 'text-emerald-400' : 'text-red-400'"
+                         x-text="seat.status"></div>
+                  </div>
+                  <div class="ml-auto" x-show="isSeatSelected(seat.id)">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-orange-400"></i>
+                  </div>
+                </button>
+              </template>
+            </div>
+            <div x-show="seats.length === 0 && !loadingSeats" class="text-xs text-gray-400 text-center py-4">
+              Select a zone above to see available stations.
+            </div>
+          </div>
+
+          <!-- Hidden input + selected display -->
+          <input type="hidden" name="seat_ids_json" :value="selectedSeatIds.join(',')">
+          <div x-show="selectedSeatIds.length > 0" class="p-3 bg-surface3 rounded-lg border border-orange-500/30 flex items-center justify-between text-xs">
+            <span class="text-gray-300">Selected: <strong class="text-emerald-400 font-mono" x-text="selectedSeatCodes.join(', ')"></strong></span>
+            <span class="badge badge-red" x-text="selectedSeatIds.length + ' Station(s)'"></span>
+          </div>
+        </div>
+
+        <!-- STEP 4: Gaming Package & Add-ons -->
+        <div class="card bg-surface1 border-gridBorder p-6 space-y-5">
+          <div class="flex items-center gap-3 pb-3 border-b border-gridBorder/40">
+            <span class="w-7 h-7 rounded-full bg-primaryRed text-white text-xs font-black flex items-center justify-center">4</span>
+            <h3 class="font-bold text-base text-white">PACKAGE & REFRESHMENTS</h3>
+          </div>
+
+          <!-- Package Selection -->
+          <div class="space-y-3">
+            <label class="form-label">Gaming Pass (Optional Bundled Value)</label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button type="button" 
+                      @click="selectedPackageId = null; recalculatePrice();"
+                      :class="selectedPackageId === null ? 'border-primaryRed bg-surface3' : 'border-gridBorder/40 bg-surface2'"
+                      class="p-3 rounded-lg border text-left text-xs space-y-1">
+                <div class="font-bold text-white">Standard Hourly</div>
+                <p class="text-[10px] text-gray-400">Pay as per duration & zone base rate</p>
+              </button>
+              {% for pkg in packages %}
+                <button type="button"
+                        @click="selectedPackageId = {{ pkg.id }}; recalculatePrice();"
+                        :class="selectedPackageId === {{ pkg.id }} ? 'border-primaryRed bg-surface3 shadow-md' : 'border-gridBorder/40 bg-surface2'"
+                        class="p-3 rounded-lg border text-left text-xs space-y-1">
+                  <div class="font-bold text-white flex justify-between">
+                    <span>{{ pkg.name }}</span>
+                    <span class="text-emerald-400">₹{{ pkg.price|floatformat:0 }}</span>
+                  </div>
+                  <p class="text-[10px] text-mutedRed">{{ pkg.duration_hours }} hrs pass</p>
+                </button>
+              {% endfor %}
+            </div>
+            <input type="hidden" name="package_id" x-model="selectedPackageId">
+          </div>
+
+          <!-- Add-ons Selection -->
+          <div class="space-y-3 pt-3 border-t border-gridBorder/40">
+            <label class="form-label">Refreshments & Gamer Fuel</label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {% for addon in addons %}
+                <label class="p-3 rounded-lg border border-gridBorder/50 bg-surface2 hover:border-primaryRed cursor-pointer flex items-center gap-2.5 text-xs text-gray-200">
+                  <input type="checkbox" name="addon_ids" value="{{ addon.id }}" @change="toggleAddon({{ addon.id }})" class="rounded text-primaryRed focus:ring-primaryRed">
+                  <div class="truncate">
+                    <span class="block font-semibold truncate">{{ addon.name }}</span>
+                    <span class="text-[10px] text-emerald-400 font-bold">+₹{{ addon.price|floatformat:0 }}</span>
+                  </div>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 5: Customer Details Checkpoint -->
+        {% if not user.is_authenticated %}
+        <div class="card bg-surface1 border-gridBorder p-6 space-y-5">
+          <div class="flex items-center gap-3 pb-3 border-b border-gridBorder/40">
+            <span class="w-7 h-7 rounded-full bg-primaryRed text-white text-xs font-black flex items-center justify-center">5</span>
+            <div>
+              <h3 class="font-bold text-base text-white">YOUR CONTACT DETAILS</h3>
+              <p class="text-[11px] text-gray-400">Digital QR ticket & SMS receipt will be delivered here</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="form-group mb-0">
+              <label class="form-label">Full Name</label>
+              <input type="text" name="customer_name" required placeholder="Gamer Name" class="form-input text-xs">
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label">Email Address</label>
+              <input type="email" name="customer_email" required placeholder="email@domain.com" class="form-input text-xs">
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label">Phone Number</label>
+              <input type="text" name="customer_phone" required placeholder="+91 9876543210" class="form-input text-xs">
+            </div>
+          </div>
+
+          <div class="pt-2 text-xs text-gray-400">
+            Already a member? <a href="{% url 'accounts:login' %}?next={% url 'bookings:wizard' %}" class="text-primaryRed font-bold hover:underline">Log in for 1-click booking & Loyalty XP &rarr;</a>
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+
+      <!-- Persistent Booking Summary Sidebar (Right 4 Cols) -->
+      <div class="lg:col-span-4 sticky top-24 space-y-6">
+        
+        <div class="card card-elevated border-gridBorder p-6 space-y-6 shadow-2xl">
+          <div class="flex items-center justify-between pb-3 border-b border-gridBorder/40">
+            <h3 class="font-bold text-sm text-white uppercase tracking-wider">BOOKING SUMMARY</h3>
+            <span class="badge badge-amber text-[10px]">RESERVATION DRAFT</span>
+          </div>
+
+          <!-- Summary Items -->
+          <div class="space-y-3 text-xs">
+            <div class="flex justify-between py-1 border-b border-gridBorder/30">
+              <span class="text-gray-400">Zone</span>
+              <span class="text-white font-bold" x-text="selectedZoneName">PC Arena</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-gridBorder/30">
+              <span class="text-gray-400">Date & Slot</span>
+              <span class="text-white font-bold" x-text="bookingDate + ' @ ' + startTime"></span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-gridBorder/30">
+              <span class="text-gray-400">Duration</span>
+              <span class="text-white font-bold" x-text="durationHours + ' Hour(s)'"></span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-gridBorder/30">
+              <span class="text-gray-400">Seat(s)</span>
+              <span class="text-emerald-400 font-mono font-bold" x-text="selectedSeatCodes.join(', ') || 'None selected'"></span>
+            </div>
+          </div>
+
+          <!-- Coupon Application Form -->
+          <div class="space-y-2 pt-2">
+            <label class="form-label">Promotional Coupon Code</label>
+            <div class="flex gap-2">
+              <input type="text" name="coupon_code" x-model="couponCode" placeholder="e.g. GAMER10" class="form-input text-xs font-mono uppercase">
+              <button type="button" @click="recalculatePrice()" class="btn btn-secondary btn-sm flex-shrink-0">
+                Apply
+              </button>
+            </div>
+            <p x-show="couponError" class="text-[11px] text-red-400" x-text="couponError"></p>
+            <p x-show="couponSuccess" class="text-[11px] text-emerald-400" x-text="couponSuccess"></p>
+          </div>
+
+          <!-- Transparent Price Breakdown -->
+          <div class="space-y-2 pt-4 border-t border-gridBorder/50 text-xs">
+            <div class="flex justify-between text-gray-400">
+              <span>Base / Package Amount</span>
+              <span class="text-white font-semibold" x-text="'₹' + pricing.base_amount.toFixed(2)">₹0.00</span>
+            </div>
+            <div class="flex justify-between text-gray-400" x-show="pricing.addons_amount > 0">
+              <span>Refreshments & Add-ons</span>
+              <span class="text-white font-semibold" x-text="'₹' + pricing.addons_amount.toFixed(2)">₹0.00</span>
+            </div>
+            <div class="flex justify-between text-emerald-400" x-show="pricing.discount_amount > 0">
+              <span>Offer Discount</span>
+              <span class="font-bold" x-text="'-₹' + pricing.discount_amount.toFixed(2)">-₹0.00</span>
+            </div>
+            <div class="flex justify-between text-gray-400">
+              <span>GST / Taxes (18%)</span>
+              <span class="text-white font-semibold" x-text="'₹' + pricing.tax_amount.toFixed(2)">₹0.00</span>
+            </div>
+
+            <div class="pt-3 border-t border-gridBorder flex justify-between items-baseline">
+              <span class="text-sm font-bold text-white uppercase">Grand Total</span>
+              <span class="text-2xl font-black text-primaryRed" x-text="'₹' + pricing.grand_total.toFixed(2)">₹0.00</span>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" 
+                  :disabled="selectedSeatIds.length === 0"
+                  :class="selectedSeatIds.length === 0 ? 'opacity-50 cursor-not-allowed' : 'shadow-xl shadow-primaryRed/40'"
+                  class="btn btn-primary btn-lg w-full justify-center text-sm font-bold">
+            <i data-lucide="lock" class="w-4 h-4"></i>
+            <span>PROCEED TO PAYMENT</span>
+          </button>
+
+          <p class="text-[10px] text-gray-400 text-center">
+            🔒 10-Minute Hold Lock Guarantee • No Double Booking
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </form>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function bookingWizard() {
+    return {
+      bookingDate: '{{ today_str }}',
+      startTime: '14:00',
+      durationHours: '2.0',
+      selectedZoneId: {{ pre_zone_id|default:zones.0.id|default:1 }},
+      selectedZoneName: '{{ zones.0.name|default:"PC Arena" }}',
+      selectedPackageId: {{ pre_package_id|default:"null" }},
+      selectedSeatIds: [],
+      selectedSeatCodes: [],
+      selectedAddonIds: [],
+      couponCode: '{{ request.GET.coupon|default:"" }}',
+      couponError: '',
+      couponSuccess: '',
+      seats: [],
+      loadingSeats: false,
+      pricing: {
+        base_amount: 0,
+        addons_amount: 0,
+        discount_amount: 0,
+        tax_amount: 0,
+        grand_total: 0
+      },
+
+      init() {
+        this.fetchSeatAvailability();
+        this.recalculatePrice();
+      },
+
+      selectZone(id, name, rate) {
+        this.selectedZoneId = id;
+        this.selectedZoneName = name;
+        this.selectedSeatIds = [];
+        this.selectedSeatCodes = [];
+        this.fetchSeatAvailability();
+        this.recalculatePrice();
+      },
+
+      async fetchSeatAvailability() {
+        this.loadingSeats = true;
+        try {
+          const res = await fetch(`/booking/api/check-availability/?zone_id=${this.selectedZoneId}&date=${this.bookingDate}&time=${this.startTime}&duration=${this.durationHours}`);
+          const data = await res.json();
+          this.seats = data.seats || [];
+        } catch(e) {
+          console.error(e);
+        } finally {
+          this.loadingSeats = false;
+        }
+      },
+
+      isSeatSelected(id) {
+        return this.selectedSeatIds.includes(id);
+      },
+
+      toggleSeat(seat) {
+        if (seat.status === 'OCCUPIED' || seat.status === 'MAINTENANCE') return;
+
+        const idx = this.selectedSeatIds.indexOf(seat.id);
+        if (idx > -1) {
+          this.selectedSeatIds.splice(idx, 1);
+          this.selectedSeatCodes.splice(idx, 1);
+        } else {
+          this.selectedSeatIds.push(seat.id);
+          this.selectedSeatCodes.push(seat.code);
+        }
+        this.recalculatePrice();
+      },
+
+      toggleAddon(id) {
+        const idx = this.selectedAddonIds.indexOf(id);
+        if (idx > -1) {
+          this.selectedAddonIds.splice(idx, 1);
+        } else {
+          this.selectedAddonIds.push(id);
+        }
+        this.recalculatePrice();
+      },
+
+      async recalculatePrice() {
+        try {
+          const res = await fetch('/pricing/api/calculate/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              zone_id: this.selectedZoneId,
+              package_id: this.selectedPackageId,
+              duration_hours: this.durationHours,
+              seat_count: Math.max(1, this.selectedSeatIds.length),
+              addon_ids: this.selectedAddonIds,
+              coupon_code: this.couponCode
+            })
+          });
+          const data = await res.json();
+          this.pricing = data;
+          if (data.offer_error) {
+            this.couponError = data.offer_error;
+            this.couponSuccess = '';
+          } else if (data.offer_title) {
+            this.couponSuccess = `Applied: ${data.offer_title} (-₹${data.discount_amount})`;
+            this.couponError = '';
+          } else {
+            this.couponError = '';
+            this.couponSuccess = '';
+          }
+        } catch(e) {
+          console.error(e);
+        }
+      },
+
+      validateBeforeSubmit(e) {
+        if (this.selectedSeatIds.length === 0) {
+          e.preventDefault();
+          alert('Please click on at least one available seat on the interactive seat map.');
+        }
+      }
+    }
+  }
+</script>
+{% endblock %}

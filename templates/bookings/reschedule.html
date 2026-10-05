@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Reschedule Booking #{{ booking.booking_reference }} — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-12 max-w-xl">
+  <div class="card bg-surface1 border-gridBorder p-8 space-y-6">
+    
+    <div class="space-y-1">
+      <span class="badge badge-amber">SLOT RESCHEDULING</span>
+      <h1 class="heading-1 text-white">RESCHEDULE SESSION</h1>
+      <p class="text-xs text-gray-400">Change your reserved time for Booking <strong class="text-primaryRed font-mono">#{{ booking.booking_reference }}</strong> (Seat(s): {{ booking.seat_codes_display }}).</p>
+    </div>
+
+    <form method="POST" class="space-y-5">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label">New Date</label>
+        <input type="date" name="new_date" min="{{ booking.booking_date|date:'Y-m-d' }}" value="{{ booking.booking_date|date:'Y-m-d' }}" required class="form-input text-xs font-semibold">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">New Start Time</label>
+        <select name="new_time" required class="form-select text-xs font-semibold">
+          <option value="10:00">10:00 AM</option>
+          <option value="11:00">11:00 AM</option>
+          <option value="12:00">12:00 PM</option>
+          <option value="13:00">01:00 PM</option>
+          <option value="14:00">02:00 PM</option>
+          <option value="15:00">03:00 PM</option>
+          <option value="16:00">04:00 PM</option>
+          <option value="17:00">05:00 PM</option>
+          <option value="18:00">06:00 PM</option>
+          <option value="19:00">07:00 PM</option>
+          <option value="20:00">08:00 PM</option>
+          <option value="21:00">09:00 PM</option>
+          <option value="22:00">10:00 PM</option>
+        </select>
+      </div>
+
+      <div class="p-4 rounded-xl bg-surface2 border border-gridBorder text-xs text-gray-300 space-y-1">
+        <p class="font-bold text-white">ℹ️ Reschedule Rules:</p>
+        <p>• Your assigned seats ({{ booking.seat_codes_display }}) will be validated for the new slot.</p>
+        <p>• Duration remains {{ booking.duration_hours }} hour(s) with no extra fee.</p>
+      </div>
+
+      <div class="pt-4 border-t border-gridBorder/50 flex items-center justify-between">
+        <a href="{% url 'bookings:booking_detail' booking_reference=booking.booking_reference %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Confirm Reschedule</button>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

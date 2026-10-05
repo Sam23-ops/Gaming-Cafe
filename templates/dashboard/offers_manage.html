@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Offers & Promotions Engine — Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container py-10 space-y-8">
+  
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div>
+      <span class="badge badge-red mb-1">COMMERCIAL RULES</span>
+      <h1 class="display-title text-white">OFFERS & <span class="text-primaryRed">COUPONS</span></h1>
+    </div>
+    <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+  </div>
+
+  <!-- Create New Offer Form -->
+  <div class="card bg-surface1 border-gridBorder p-6 space-y-4" x-data="{ showForm: false }">
+    <div class="flex items-center justify-between">
+      <h3 class="font-bold text-sm text-white uppercase tracking-wider">CREATE NEW PROMOTIONAL OFFER</h3>
+      <button type="button" @click="showForm = !showForm" class="btn btn-primary btn-sm">
+        <span x-text="showForm ? 'Hide Form' : '+ New Offer Rule'"></span>
+      </button>
+    </div>
+
+    <form method="POST" x-show="showForm" x-transition class="space-y-4 pt-3 border-t border-gridBorder/40" x-data="{ durationType: 'persistent' }">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create">
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="form-group">
+          <label class="form-label">Offer Title</label>
+          <input type="text" name="title" required placeholder="e.g. Weekend Rush 20%" class="form-input text-xs">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Offer Type</label>
+          <select name="offer_type" class="form-select text-xs">
+            <option value="PERCENT">Percentage Discount (%)</option>
+            <option value="FLAT">Flat Amount Discount (₹)</option>
+            <option value="STUDENT">Student Discount</option>
+            <option value="HAPPY_HOUR">Happy Hour</option>
+            <option value="GROUP">Group Discount (3+ seats)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Discount Value</label>
+          <input type="number" name="discount_value" required value="20" class="form-input text-xs">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="form-group">
+          <label class="form-label">Coupon Code (Optional)</label>
+          <input type="text" name="coupon_code" placeholder="e.g. WEEKEND20" class="form-input text-xs font-mono uppercase">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Max Discount Cap (₹)</label>
+          <input type="number" name="max_discount_cap" placeholder="e.g. 500" class="form-input text-xs">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Min Order Amount (₹)</label>
+          <input type="number" name="min_order_amount" value="0" class="form-input text-xs">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description & Rules</label>
+        <textarea name="description" rows="2" required placeholder="Offer description shown to gamers..." class="form-input text-xs"></textarea>
+      </div>
+
+      <!-- ── Duration Quick-Select Buttons ──────────────────────────────────── -->
+      <div class="form-group">
+        <label class="form-label">Offer Expiry / Duration</label>
+        <div class="grid grid-cols-2 sm:grid-cols-7 gap-2 mb-3">
+          <button type="button" @click="durationType = 'persistent'" 
+                  :class="durationType === 'persistent' ? 'bg-emerald-600 text-white' : 'bg-surface3 text-gray-300 hover:bg-surface2'"
+                  class="px-3 py-2 rounded-lg text-xs font-bold border border-gridBorder transition">
+            ♾️ Persistent
+          </button>
+          <button type="button" @click="durationType = '2h'" 
+                  :class="durationType === '2h' ? 'bg-primaryOrange text-white' : 'bg-surface3 text-gray-300 hover:bg-surface2'"
+                  class="px-3 py-2 rounded-lg text-xs font-bold border border-gridBorder transition">
+            + 2 Hours
+          </button>
+          <button type="button" @click="durationType = '6h'" 
+                  :class="durationType === '6h' ? 'bg-primaryOrange text-white' : 'bg-surface3 text-gray-300 hover:bg-surface2'"
+                  class="px-3 py-2 rounded-lg text-xs font-bold border border-gridBorder transition">
+            + 6 Hours
+          </button>
+          <button type="button" @click="durationType = '24h'" 
+                  :class="durationType === '24h' ? 'bg-primaryOrange text-white' : 'bg-surface3 text-gray-300 hover:bg-surface2'"
+                  class="px-3 py-2 rounded-lg text-xs font-bold border border-gridBorder transition">
+            + 24 Hours
+          </button>
+          <button type="button" @click="durationType = '3d'" 
+                  :class="durationType === '3d' ? 'bg-primaryOrange text-white' : 'bg-surface3 text-gray-300 hover:bg-surface2'"
+                  class="px-3 py-2 rounded-lg text-xs font-bold border border-gridBorder transition">
+            + 3 Days
+          </button>
+          <button type="button" @click="durationType = '7d'" 
+                  :class="durationType === '7d' ? 'bg-primaryOrange text-white' : 'bg-surface3 text-gray-300 hover:bg-surface2'"
+                  class="px-3 py-2 rounded-lg text-xs font-bold border border-gridBorder transition">
+            + 7 Days
+          </button>
+          <button type="button" @click="durationType = 'custom'" 
+                  :class="durationType === 'custom' ? 'bg-cyanNeon text-black' : 'bg-surface3 text-gray-300 hover:bg-surface2'"
+                  class="px-3 py-2 rounded-lg text-xs font-bold border border-gridBorder transition">
+            Custom ⏰
+          </button>
+        </div>
+
+        <!-- Hidden input to submit duration type -->
+        <input type="hidden" name="duration_type" :value="durationType">
+
+        <!-- Custom datetime picker (shown only when custom selected) -->
+        <div x-show="durationType === 'custom'" x-transition class="mt-3">
+          <label class="text-xs text-gray-400 block mb-1">Exact Expiry Date & Time</label>
+          <input type="datetime-local" name="valid_until_custom" class="form-input text-xs">
+        </div>
+
+        <p class="text-[11px] text-gray-400 mt-2">
+          <strong>Persistent:</strong> No expiry — offer always active.<br>
+          <strong>Timed:</strong> Frontend countdown timer ticks down in real-time.
+        </p>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-sm">Publish Offer</button>
+    </form>
+  </div>
+
+  <!-- Offers Table -->
+  <div class="card p-0 bg-surface1 border-gridBorder overflow-x-auto shadow-2xl">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Offer Title & Code</th>
+          <th>Type</th>
+          <th>Discount</th>
+          <th>Min Spend / Cap</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for offer in offers %}
+          <tr>
+            <td class="text-xs">
+              <strong class="text-white block">{{ offer.title }}</strong>
+              {% if offer.coupon_code %}
+                <span class="font-mono text-emerald-400 font-bold text-[10px]">CODE: {{ offer.coupon_code }}</span>
+              {% else %}
+                <span class="text-gray-500 text-[10px]">Auto-applied</span>
+              {% endif %}
+            </td>
+            <td class="text-xs text-gray-300">{{ offer.get_offer_type_display }}</td>
+            <td class="text-xs font-bold text-primaryRed">
+              {% if offer.offer_type == 'PERCENT' or offer.offer_type == 'STUDENT' or offer.offer_type == 'HAPPY_HOUR' %}
+                {{ offer.discount_value }}% OFF
+              {% else %}
+                ₹{{ offer.discount_value }} OFF
+              {% endif %}
+            </td>
+            <td class="text-xs text-gray-400">Min ₹{{ offer.min_order_amount }} / Cap ₹{{ offer.max_discount_cap|default:'None' }}</td>
+            <td>
+              <span class="badge {% if offer.is_active %}badge-green{% else %}badge-red{% endif %} text-[9px]">
+                {% if offer.is_active %}ACTIVE{% else %}DISABLED{% endif %}
+              </span>
+            </td>
+            <td>
+              <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="toggle_active">
+                <input type="hidden" name="offer_id" value="{{ offer.id }}">
+                <button type="submit" class="btn btn-secondary btn-sm text-[10px] py-1 px-2">
+                  Toggle
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

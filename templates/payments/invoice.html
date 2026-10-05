@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GST Tax Invoice — {{ invoice.invoice_number|default:booking.booking_reference }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #111827; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="p-4 sm:p-12 min-h-screen">
+
+  <div class="max-w-3xl mx-auto bg-white border border-gray-200 rounded-2xl shadow-xl p-8 sm:p-12 space-y-8">
+    
+    <!-- Invoice Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-8 border-b border-gray-200 gap-4">
+      <div>
+        <h1 class="text-2xl font-black tracking-wider text-red-600 uppercase">GAMMERS ADDA</h1>
+        <p class="text-xs text-gray-500 font-medium">Ultra Gaming-Cafe & Esports Arena</p>
+        <p class="text-xs text-gray-500 mt-1">GSTIN: {{ invoice.gstin|default:'29AABCG1234F1Z8' }}</p>
+        <p class="text-xs text-gray-500">Level 2, Cyber Hub, Tech District, Bangalore</p>
+      </div>
+
+      <div class="text-left sm:text-right">
+        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">TAX INVOICE</span>
+        <strong class="text-lg font-bold text-gray-900 mono block">{{ invoice.invoice_number|default:booking.booking_reference }}</strong>
+        <span class="text-xs text-gray-500">Date: {{ booking.created_at|date:"d M Y" }}</span>
+      </div>
+    </div>
+
+    <!-- Bill To & Booking Meta -->
+    <div class="grid grid-cols-2 gap-8 text-xs">
+      <div>
+        <span class="text-gray-400 font-bold uppercase block mb-1">BILLED TO:</span>
+        <strong class="text-gray-900 text-sm block">{{ booking.customer_name }}</strong>
+        <p class="text-gray-600">{{ booking.customer_email }}</p>
+        <p class="text-gray-600">{{ booking.customer_phone }}</p>
+      </div>
+
+      <div>
+        <span class="text-gray-400 font-bold uppercase block mb-1">SESSION DETAILS:</span>
+        <p class="text-gray-700"><strong>Zone:</strong> {{ booking.zone.name }}</p>
+        <p class="text-gray-700"><strong>Seat(s):</strong> <span class="mono font-bold">{{ booking.seat_codes_display }}</span></p>
+        <p class="text-gray-700"><strong>Slot:</strong> {{ booking.booking_date|date:"d M Y" }} @ {{ booking.start_time|time:"H:i" }} ({{ booking.duration_hours }}h)</p>
+      </div>
+    </div>
+
+    <!-- Table of Charges -->
+    <table class="w-full text-left text-xs border-collapse">
+      <thead>
+        <tr class="border-y border-gray-200 bg-gray-50 text-gray-600 font-bold uppercase">
+          <th class="py-3 px-2">Item Description</th>
+          <th class="py-3 px-2 text-center">Qty / Duration</th>
+          <th class="py-3 px-2 text-right">Amount (INR)</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100 text-gray-800">
+        <tr>
+          <td class="py-3.5 px-2">
+            <strong>{{ booking.zone.name }} Seat Session</strong>
+            <p class="text-gray-400 text-[11px]">Seat(s): {{ booking.seat_codes_display }}</p>
+          </td>
+          <td class="py-3.5 px-2 text-center">{{ booking.duration_hours }} hrs</td>
+          <td class="py-3.5 px-2 text-right font-medium">₹{{ booking.base_amount }}</td>
+        </tr>
+        {% for item in booking.items.all %}
+          <tr>
+            <td class="py-3.5 px-2">{{ item.addon.name }}</td>
+            <td class="py-3.5 px-2 text-center">{{ item.quantity }}</td>
+            <td class="py-3.5 px-2 text-right font-medium">₹{{ item.total_price }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Totals & Taxes -->
+    <div class="border-t border-gray-200 pt-4 flex justify-end">
+      <div class="w-64 space-y-2 text-xs">
+        <div class="flex justify-between text-gray-600">
+          <span>Subtotal:</span>
+          <span class="font-medium">₹{{ booking.base_amount|add:booking.addons_amount }}</span>
+        </div>
+        {% if booking.discount_amount > 0 %}
+          <div class="flex justify-between text-emerald-600 font-bold">
+            <span>Discount:</span>
+            <span>-₹{{ booking.discount_amount }}</span>
+          </div>
+        {% endif %}
+        <div class="flex justify-between text-gray-600">
+          <span>CGST (9%):</span>
+          <span class="font-medium">₹{{ booking.tax_amount|floatformat:2 }}</span>
+        </div>
+        <div class="flex justify-between text-gray-600">
+          <span>SGST (9%):</span>
+          <span class="font-medium">₹{{ booking.tax_amount|floatformat:2 }}</span>
+        </div>
+        <div class="border-t border-gray-300 pt-2 flex justify-between text-sm font-black text-gray-900">
+          <span>Total Paid:</span>
+          <span class="text-red-600 text-base">₹{{ booking.total_amount }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Print / Action Toolbar -->
+    <div class="border-t border-gray-200 pt-6 flex justify-between items-center text-xs print:hidden">
+      <span class="text-gray-400">Payment Status: <strong class="text-emerald-600">PAID (SUCCESS)</strong></span>
+      <button onclick="window.print()" class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-md transition">
+        Print Official Invoice
+      </button>
+    </div>
+
+  </div>
+
+</body>
+</html>

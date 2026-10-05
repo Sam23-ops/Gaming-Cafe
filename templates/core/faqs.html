@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Frequently Asked Questions — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-14 max-w-4xl space-y-12">
+  
+  <div class="text-center space-y-3">
+    <span class="badge badge-red">KNOWLEDGE BASE</span>
+    <h1 class="display-title text-white">FREQUENTLY ASKED <span class="text-primaryRed">QUESTIONS</span></h1>
+    <p class="text-sm text-gray-400">Everything you need to know about booking, hardware, cancellation, and cafe perks.</p>
+  </div>
+
+  <div class="space-y-4" x-data="{ active: 1 }">
+    
+    <div class="card bg-surface1 border-gridBorder p-5 cursor-pointer" @click="active = (active === 1 ? null : 1)">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-base text-white">How does seat booking work?</h3>
+        <i data-lucide="chevron-down" class="w-5 h-5 text-primaryRed transition-transform" :class="active === 1 ? 'rotate-180' : ''"></i>
+      </div>
+      <div x-show="active === 1" x-collapse class="mt-4 text-xs text-gray-300 leading-relaxed pt-3 border-t border-gridBorder/40">
+        You can choose your desired date, start time slot, duration, and specific PC or console seat on our interactive 2D arena seat map. Your chosen seat is held exclusively for you during checkout, and upon payment confirmation you receive an instant digital QR ticket.
+      </div>
+    </div>
+
+    <div class="card bg-surface1 border-gridBorder p-5 cursor-pointer" @click="active = (active === 2 ? null : 2)">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-base text-white">Can I bring my own peripherals (Mouse, Keyboard, Headset)?</h3>
+        <i data-lucide="chevron-down" class="w-5 h-5 text-primaryRed transition-transform" :class="active === 2 ? 'rotate-180' : ''"></i>
+      </div>
+      <div x-show="active === 2" x-collapse class="mt-4 text-xs text-gray-300 leading-relaxed pt-3 border-t border-gridBorder/40">
+        Absolutely! While our rigs are equipped with tournament-grade Razer and Logitech G Pro gear, players are welcome to plug in their own mice, mechanical keyboards, audio DACs, or console controllers via front USB 3.2 hubs.
+      </div>
+    </div>
+
+    <div class="card bg-surface1 border-gridBorder p-5 cursor-pointer" @click="active = (active === 3 ? null : 3)">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-base text-white">What is the cancellation and refund policy?</h3>
+        <i data-lucide="chevron-down" class="w-5 h-5 text-primaryRed transition-transform" :class="active === 3 ? 'rotate-180' : ''"></i>
+      </div>
+      <div x-show="active === 3" x-collapse class="mt-4 text-xs text-gray-300 leading-relaxed pt-3 border-t border-gridBorder/40">
+        You can cancel or reschedule any booking up to 1 hour before the scheduled session start time directly through your Customer Dashboard. Refunds are credited back to your original payment method or wallet instantly.
+      </div>
+    </div>
+
+    <div class="card bg-surface1 border-gridBorder p-5 cursor-pointer" @click="active = (active === 4 ? null : 4)">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-base text-white">How do loyalty XP and reward points work?</h3>
+        <i data-lucide="chevron-down" class="w-5 h-5 text-primaryRed transition-transform" :class="active === 4 ? 'rotate-180' : ''"></i>
+      </div>
+      <div x-show="active === 4" x-collapse class="mt-4 text-xs text-gray-300 leading-relaxed pt-3 border-t border-gridBorder/40">
+        Every booking earns you XP reward points (10 XP per ₹100 spent). You also earn 100 XP upon sign up and 200 XP for every friend who signs up using your unique referral code. Points can be redeemed for discounts, free extra hours, and cafe refreshments.
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

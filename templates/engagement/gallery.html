@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Arena Photo Gallery — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-12 space-y-10" x-data="{ lightboxImg: null }">
+  
+  <div class="text-center max-w-2xl mx-auto space-y-3">
+    <span class="badge badge-red">PHOTO & VIDEO VAULT</span>
+    <h1 class="display-title text-white">ARENA <span class="text-primaryRed">GALLERY</span></h1>
+    <p class="text-xs md:text-sm text-gray-400">Experience the neon aesthetics, high-end PC battle stations, and console lounges.</p>
+  </div>
+
+  <!-- Category Filter Pills -->
+  <div class="flex flex-wrap items-center justify-center gap-2">
+    <a href="{% url 'engagement:gallery' %}" class="px-4 py-1.5 rounded-full text-xs font-semibold {% if not selected_category %}bg-primaryRed text-white{% else %}bg-surface2 text-gray-400 hover:text-white border border-gridBorder{% endif %}">
+      All Media
+    </a>
+    {% for cat in categories %}
+      <a href="{% url 'engagement:gallery' %}?category={{ cat.slug }}" class="px-4 py-1.5 rounded-full text-xs font-semibold {% if selected_category == cat.slug %}bg-primaryRed text-white{% else %}bg-surface2 text-gray-400 hover:text-white border border-gridBorder{% endif %}">
+        {{ cat.name }}
+      </a>
+    {% endfor %}
+  </div>
+
+  <!-- Responsive Masonry / Grid Gallery -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for item in items %}
+      <div class="card p-0 bg-surface1 border-gridBorder hover:border-primaryRed overflow-hidden group cursor-pointer" @click="lightboxImg = '{{ item.display_url }}'">
+        <div class="aspect-[4/3] relative overflow-hidden bg-surface2">
+          <img src="{{ item.display_url }}" alt="{{ item.title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+          <div class="absolute inset-0 bg-gradient-to-t from-surface1 via-transparent to-transparent opacity-80"></div>
+          <div class="absolute bottom-3 left-4 right-4">
+            <span class="badge badge-red text-[9px] mb-1">{{ item.category.name }}</span>
+            <h4 class="font-bold text-sm text-white truncate">{{ item.title }}</h4>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-span-3 card bg-surface1 border-gridBorder p-12 text-center text-xs text-gray-400">
+        No gallery items found in this category.
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Lightbox Modal -->
+  <div x-show="lightboxImg" @click="lightboxImg = null" x-transition class="modal-backdrop" style="display: none;">
+    <div class="relative max-w-4xl max-h-[90vh] p-2 bg-surface1 border border-gridBorder rounded-2xl overflow-hidden shadow-2xl" @click.stop>
+      <button @click="lightboxImg = null" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-surface2 text-white flex items-center justify-center font-bold text-lg hover:bg-primaryRed z-10">&times;</button>
+      <img :src="lightboxImg" alt="Enlarged" class="max-w-full max-h-[80vh] object-contain rounded-xl mx-auto">
+    </div>
+  </div>
+
+</div>
+{% endblock %}

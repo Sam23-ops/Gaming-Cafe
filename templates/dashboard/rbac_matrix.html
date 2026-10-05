@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Granular RBAC Permission Matrix — Super Admin{% endblock %}
+
+{% block content %}
+<div class="container py-10 space-y-8" x-data="rbacMatrix()">
+  
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div>
+      <span class="badge badge-purple mb-1">SECURITY & ACCESS CONTROL</span>
+      <h1 class="display-title text-white">RBAC <span class="text-primaryRed">MATRIX</span></h1>
+      <p class="text-xs text-gray-400">Manage granular permissions across all 7 platform roles. Authoritative server-side enforcement.</p>
+    </div>
+    <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+  </div>
+
+  <div class="card p-0 bg-surface1 border-gridBorder overflow-x-auto shadow-2xl">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th class="w-1/3">Domain Permission</th>
+          {% for role in roles %}
+            <th class="text-center font-bold text-xs {% if role.code == 'SUPER_ADMIN' %}text-primaryRed{% elif role.code == 'ADMIN' %}text-amber-400{% else %}text-gray-300{% endif %}">
+              {{ role.name }}
+            </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for domain, perms in domains.items %}
+          <!-- Domain Section Row -->
+          <tr class="bg-surface2/80">
+            <td colspan="{{ roles.count|add:1 }}" class="py-2 px-4 font-bold text-xs text-mutedRed uppercase tracking-wider">
+              📁 {{ domain }} DOMAIN PERMISSIONS
+            </td>
+          </tr>
+
+          {% for p in perms %}
+            <tr>
+              <td class="text-xs">
+                <strong class="text-white block">{{ p.name }}</strong>
+                <span class="font-mono text-[10px] text-gray-400">{{ p.codename }}</span>
+              </td>
+
+              {% for role in roles %}
+                <td class="text-center">
+                  {% if role.code == 'SUPER_ADMIN' %}
+                    <span class="badge badge-green text-[10px] font-bold">ALL</span>
+                  {% else %}
+                    <button type="button" 
+                            @click="togglePermission({{ role.id }}, {{ p.id }}, $event)"
+                            data-has="{% if p in role.permissions.all %}true{% else %}false{% endif %}"
+                            class="w-6 h-6 rounded-md border text-xs font-bold transition inline-flex items-center justify-center
+                                   {% if p in role.permissions.all %}bg-primaryRed text-white border-primaryRed shadow-sm shadow-primaryRed/40{% else %}bg-surface2 text-gray-500 border-gridBorder hover:border-gray-500{% endif %}">
+                      {% if p in role.permissions.all %}✔{% else %}&times;{% endif %}
+                    </button>
+                  {% endif %}
+                </td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function rbacMatrix() {
+    return {
+      async togglePermission(roleId, permId, event) {
+        const btn = event.currentTarget;
+        const currentHas = btn.getAttribute('data-has') === 'true';
+        const newAction = currentHas ? 'remove' : 'add';
+
+        try {
+          const formData = new FormData();
+          formData.append('role_id', roleId);
+          formData.append('perm_id', permId);
+          formData.append('action', newAction);
+
+          const res = await fetch('/admin-portal/rbac/', {
+            method: 'POST',
+            headers: {'X-CSRFToken': '{{ csrf_token }}'},
+            body: formData
+          });
+          const data = await res.json();
+          if (data.success) {
+            btn.setAttribute('data-has', (!currentHas).toString());
+            if (!currentHas) {
+              btn.className = 'w-6 h-6 rounded-md border text-xs font-bold transition inline-flex items-center justify-center bg-primaryRed text-white border-primaryRed shadow-sm shadow-primaryRed/40';
+              btn.innerHTML = '✔';
+              window.showToast(`Granted ${data.perm} to ${data.role}`, 'success');
+            } else {
+              btn.className = 'w-6 h-6 rounded-md border text-xs font-bold transition inline-flex items-center justify-center bg-surface2 text-gray-500 border-gridBorder hover:border-gray-500';
+              btn.innerHTML = '&times;';
+              window.showToast(`Revoked ${data.perm} from ${data.role}`, 'info');
+            }
+          }
+        } catch(e) {
+          console.error(e);
+        }
+      }
+    }
+  }
+</script>
+{% endblock %}

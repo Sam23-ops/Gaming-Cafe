@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ event.title }} — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-12 max-w-4xl space-y-10">
+  
+  <!-- Breadcrumb -->
+  <div class="flex items-center gap-2 text-xs text-gray-400">
+    <a href="{% url 'core:home' %}" class="hover:text-primaryRed">Home</a>
+    <span>/</span>
+    <a href="{% url 'engagement:events' %}" class="hover:text-primaryRed">Tournaments</a>
+    <span>/</span>
+    <span class="text-white font-bold">{{ event.title }}</span>
+  </div>
+
+  <!-- Header Banner -->
+  <div class="card p-0 bg-surface1 border-gridBorder overflow-hidden shadow-2xl">
+    <div class="h-64 sm:h-80 bg-surface2 relative">
+      <img src="{{ event.display_banner }}" alt="{{ event.title }}" class="w-full h-full object-cover">
+      <div class="absolute inset-0 bg-gradient-to-t from-surface1 via-surface1/60 to-transparent"></div>
+      
+      <div class="absolute bottom-6 left-6 right-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div class="space-y-2">
+          <span class="badge badge-purple text-xs">{{ event.get_event_type_display }}</span>
+          <h1 class="heading-1 text-white">{{ event.title }}</h1>
+          <p class="text-xs text-emerald-400 font-bold">Prize Pool: {{ event.prize_pool }} • Entry Fee: {% if event.entry_fee > 0 %}₹{{ event.entry_fee }}{% else %}FREE ENTRY{% endif %}</p>
+        </div>
+
+        <div class="bg-surface2/90 border border-gridBorder px-4 py-2.5 rounded-xl text-center flex-shrink-0">
+          <span class="text-[10px] text-gray-400 uppercase font-bold block">Filled Slots</span>
+          <span class="text-xl font-black text-amber-400">{{ event.registrations.count }} / {{ event.max_participants }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+    
+    <!-- Details & Rules (Left 7 Cols) -->
+    <div class="md:col-span-7 space-y-6">
+      
+      <div class="card bg-surface1 border-gridBorder p-6 space-y-4">
+        <h3 class="heading-2 text-white">TOURNAMENT OVERVIEW</h3>
+        <p class="text-xs text-gray-300 leading-relaxed">{{ event.description }}</p>
+      </div>
+
+      {% if event.rules %}
+        <div class="card bg-surface1 border-gridBorder p-6 space-y-3">
+          <h3 class="font-bold text-sm text-white">OFFICIAL TOURNAMENT RULES</h3>
+          <p class="text-xs text-gray-300 leading-relaxed whitespace-pre-line">{{ event.rules }}</p>
+        </div>
+      {% endif %}
+
+      <!-- Registered Rosters -->
+      <div class="card bg-surface1 border-gridBorder p-6 space-y-4">
+        <h3 class="font-bold text-sm text-white">REGISTERED COMPETITORS ({{ event.registrations.count }})</h3>
+        <div class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-2">
+          {% for reg in event.registrations.all %}
+            <div class="p-2.5 rounded-lg bg-surface2 border border-gridBorder/40 text-xs flex items-center justify-between">
+              <span class="font-bold text-white font-mono">{{ reg.gamer_tag }}</span>
+              {% if reg.team_name %}
+                <span class="text-[10px] text-mutedRed">[{{ reg.team_name }}]</span>
+              {% endif %}
+            </div>
+          {% empty %}
+            <p class="text-xs text-gray-400 col-span-2">No players registered yet. Be the first seed!</p>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Registration Box (Right 5 Cols) -->
+    <div class="md:col-span-5 space-y-6">
+      <div class="card bg-surface2 border-gridBorder p-6 space-y-5">
+        <h3 class="font-bold text-sm text-mutedRed uppercase tracking-wider">REGISTRATION GATEWAY</h3>
+
+        <div class="space-y-2 text-xs text-gray-300">
+          <div class="flex justify-between py-1 border-b border-gridBorder/40">
+            <span class="text-gray-400">Date & Time:</span>
+            <span class="text-white font-bold">{{ event.start_time|date:"D, d M Y @ H:i" }}</span>
+          </div>
+          <div class="flex justify-between py-1 border-b border-gridBorder/40">
+            <span class="text-gray-400">Game:</span>
+            <span class="text-white">{{ event.game.title|default:'Esports Open' }}</span>
+          </div>
+          <div class="flex justify-between py-1 border-b border-gridBorder/40">
+            <span class="text-gray-400">Entry Fee:</span>
+            <span class="text-emerald-400 font-bold">{% if event.entry_fee > 0 %}₹{{ event.entry_fee }}{% else %}FREE{% endif %}</span>
+          </div>
+        </div>
+
+        {% if is_registered %}
+          <div class="p-4 rounded-xl bg-emerald-950/50 border border-emerald-700 text-center space-y-1">
+            <span class="text-sm font-bold text-emerald-300 block">✔ You are Registered!</span>
+            <p class="text-[11px] text-gray-300">Check-in at the arena 30 mins before tournament start.</p>
+          </div>
+        {% elif event.is_full %}
+          <div class="p-4 rounded-xl bg-red-950/50 border border-red-800 text-center text-xs text-red-300 font-bold">
+            Tournament has reached maximum capacity ({{ event.max_participants }} slots full).
+          </div>
+        {% elif user.is_authenticated %}
+          <form method="POST" class="space-y-4">
+            {% csrf_token %}
+            <div class="form-group">
+              <label class="form-label">Gamer Tag / In-game Name</label>
+              <input type="text" name="gamer_tag" value="{{ user.gamer_tag|default:user.username }}" required class="form-input text-xs font-mono">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Team / Squad Name (Optional)</label>
+              <input type="text" name="team_name" placeholder="e.g. CyberVipers" class="form-input text-xs">
+            </div>
+
+            <button type="submit" class="btn btn-primary w-full py-3 justify-center text-xs font-bold shadow-lg shadow-primaryRed/30">
+              CONFIRM TOURNAMENT ENTRY
+            </button>
+          </form>
+        {% else %}
+          <div class="space-y-3 pt-2">
+            <p class="text-xs text-gray-300">Please log in to register your gamer tag for this tournament.</p>
+            <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-primary w-full justify-center text-xs">
+              Log In to Register
+            </a>
+          </div>
+        {% endif %}
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

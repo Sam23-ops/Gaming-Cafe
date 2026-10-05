@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Secure Checkout — Gamer's Adda{% endblock %}
+
+{% block extra_head %}
+<!-- Razorpay Checkout SDK -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-12 max-w-5xl" x-data="checkoutData()">
+
+  <!-- Header -->
+  <div class="mb-8 space-y-2">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface2 border border-gridBorder text-xs" style="color:#00F0FF; border-color:rgba(0,240,255,0.3)">
+      <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+      <span>256-BIT ENCRYPTED · RAZORPAY SECURED GATEWAY</span>
+    </div>
+    <h1 class="display-title text-white">SECURE <span style="color:#FF7700">PAYMENT</span></h1>
+    <p class="text-xs text-gray-400">Booking Reference: <strong class="text-white font-mono">#{{ booking.booking_reference }}</strong></p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+    <!-- Left: Payment Panel -->
+    <div class="lg:col-span-7 space-y-6">
+
+      <!-- REAL RAZORPAY PAYMENT -->
+      <div class="card bg-surface1 p-8 text-center space-y-6" style="border:1px solid rgba(0,240,255,0.3)">
+
+        <div class="flex justify-center">
+          <img src="{% static 'images/gamers_adda_logo.png' %}" alt="Gamer's Adda" class="h-20 w-20 rounded-2xl border-2" style="border-color:#FF7700">
+        </div>
+
+        <div>
+          <p class="text-gray-300 text-sm mb-1">You are paying</p>
+          <p class="text-5xl font-black text-white">₹<span style="color:#FF7700">{{ booking.total_amount }}</span></p>
+          <p class="text-xs text-gray-400 mt-2">for {{ booking.duration_hours }} hr(s) on {{ booking.zone.name }}</p>
+        </div>
+
+        <!-- UPI APPS Quick Access -->
+        <div class="space-y-3">
+          <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Pay with UPI Apps</p>
+          <div class="grid grid-cols-4 gap-3">
+            <button type="button" @click="payWithRazorpay('upi')" 
+                    class="flex flex-col items-center gap-2 p-3 rounded-xl border border-gridBorder/50 bg-surface2 hover:border-orange-500 transition">
+              <div class="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center text-2xl">📱</div>
+              <span class="text-[10px] text-gray-300 font-bold">GPay</span>
+            </button>
+            <button type="button" @click="payWithRazorpay('upi')" 
+                    class="flex flex-col items-center gap-2 p-3 rounded-xl border border-gridBorder/50 bg-surface2 hover:border-orange-500 transition">
+              <div class="w-12 h-12 rounded-full bg-indigo-500/20 flex items-center justify-center text-2xl">💳</div>
+              <span class="text-[10px] text-gray-300 font-bold">PhonePe</span>
+            </button>
+            <button type="button" @click="payWithRazorpay('upi')" 
+                    class="flex flex-col items-center gap-2 p-3 rounded-xl border border-gridBorder/50 bg-surface2 hover:border-orange-500 transition">
+              <div class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-2xl">💰</div>
+              <span class="text-[10px] text-gray-300 font-bold">Paytm</span>
+            </button>
+            <button type="button" @click="payWithRazorpay('upi')" 
+                    class="flex flex-col items-center gap-2 p-3 rounded-xl border border-gridBorder/50 bg-surface2 hover:border-orange-500 transition">
+              <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center text-2xl">🏦</div>
+              <span class="text-[10px] text-gray-300 font-bold">BHIM</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="relative">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-gridBorder"></div>
+          </div>
+          <div class="relative flex justify-center text-xs">
+            <span class="px-2 bg-surface1 text-gray-400">OR PAY WITH</span>
+          </div>
+        </div>
+
+        <!-- Main Pay Button (opens all options) -->
+        <button type="button" @click="payWithRazorpay('all')"
+                :disabled="paying"
+                class="w-full py-4 rounded-xl font-black text-lg text-white transition-all"
+                style="background:linear-gradient(135deg,#FF7700,#FF5500); box-shadow:0 0 30px rgba(255,119,0,0.5)">
+          <span x-show="!paying" class="flex items-center justify-center gap-2">
+            <i data-lucide="zap" class="w-5 h-5"></i>
+            PAY ₹{{ booking.total_amount }} NOW
+          </span>
+          <span x-show="paying">⏳ Processing...</span>
+        </button>
+
+        <p class="text-[11px] text-gray-400">Cards · NetBanking · Wallets · EMI · Pay Later</p>
+
+        <!-- Trust Badges -->
+        <div class="flex justify-center gap-6 pt-2">
+          <div class="text-center">
+            <i data-lucide="shield" class="w-5 h-5 text-emerald-400 mx-auto"></i>
+            <p class="text-[10px] text-gray-400 mt-1">PCI DSS</p>
+          </div>
+          <div class="text-center">
+            <i data-lucide="lock" class="w-5 h-5 text-emerald-400 mx-auto"></i>
+            <p class="text-[10px] text-gray-400 mt-1">256-bit SSL</p>
+          </div>
+          <div class="text-center">
+            <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400 mx-auto"></i>
+            <p class="text-[10px] text-gray-400 mt-1">Razorpay Secured</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right: Order Summary -->
+    <div class="lg:col-span-5 space-y-4">
+      <div class="card bg-surface1 p-6 space-y-5" style="border:1px solid rgba(255,119,0,0.3)">
+        <h3 class="font-bold text-xs uppercase tracking-wider" style="color:#FF8800">ORDER SUMMARY</h3>
+
+        <div class="space-y-3 text-xs">
+          <div class="flex justify-between py-1 border-b border-gridBorder/40">
+            <span class="text-gray-400">Station</span>
+            <strong class="text-white">{{ booking.seat_codes_display }}</strong>
+          </div>
+          <div class="flex justify-between py-1 border-b border-gridBorder/40">
+            <span class="text-gray-400">Zone</span>
+            <strong class="text-white">{{ booking.zone.name }}</strong>
+          </div>
+          <div class="flex justify-between py-1 border-b border-gridBorder/40">
+            <span class="text-gray-400">Date & Slot</span>
+            <span class="text-white">{{ booking.booking_date|date:"D, d M" }} @ {{ booking.start_time|time:"H:i" }}</span>
+          </div>
+          <div class="flex justify-between py-1 border-b border-gridBorder/40">
+            <span class="text-gray-400">Duration</span>
+            <span class="text-white">{{ booking.duration_hours }} Hour(s)</span>
+          </div>
+        </div>
+
+        <div class="space-y-2 pt-3 border-t border-gridBorder/50 text-xs">
+          <div class="flex justify-between text-gray-400">
+            <span>Session Rate</span>
+            <span class="text-white">₹{{ booking.base_amount }}</span>
+          </div>
+          {% if booking.addons_amount > 0 %}
+          <div class="flex justify-between text-gray-400">
+            <span>Snacks / Add-ons</span>
+            <span class="text-white">₹{{ booking.addons_amount }}</span>
+          </div>
+          {% endif %}
+          {% if booking.discount_amount > 0 %}
+          <div class="flex justify-between font-semibold" style="color:#00F0FF">
+            <span>Offer Discount</span>
+            <span>-₹{{ booking.discount_amount }}</span>
+          </div>
+          {% endif %}
+          <div class="flex justify-between text-gray-400">
+            <span>GST 18%</span>
+            <span class="text-white">₹{{ booking.tax_amount }}</span>
+          </div>
+          <div class="pt-3 border-t border-gridBorder flex justify-between items-baseline">
+            <span class="text-sm font-bold text-white">TOTAL DUE</span>
+            <span class="text-3xl font-black" style="color:#FF7700">₹{{ booking.total_amount }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Badge -->
+      <div class="card bg-surface1 border-gridBorder p-4 text-center">
+        <p class="text-[10px] text-gray-400">
+          🔒 Your payment is secured by Razorpay.
+          We never store card details.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function checkoutData() {
+  return {
+    paying: false,
+    
+    async payWithRazorpay(preferredMethod) {
+      if (this.paying) return;
+      this.paying = true;
+
+      try {
+        // 1. Create Razorpay order
+        const resp = await fetch(`/payments/razorpay/create-order/{{ booking.booking_reference }}/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({})
+        });
+
+        if (!resp.ok) {
+          alert('Could not initiate payment. Please try again.');
+          this.paying = false;
+          return;
+        }
+
+        const orderData = await resp.json();
+
+        // 2. Razorpay options
+        const options = {
+          key:         orderData.key,
+          amount:      orderData.amount,
+          currency:    orderData.currency,
+          name:        orderData.name,
+          description: orderData.description,
+          order_id:    orderData.order_id,
+          prefill:     orderData.prefill,
+          theme:       { color: '#FF7700' },
+          modal: {
+            ondismiss: () => {
+              this.paying = false;
+            }
+          },
+          handler: async (response) => {
+            // 3. Verify signature
+            const verifyResp = await fetch('/payments/razorpay/verify/', {
+              method: 'POST',
+              headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                booking_reference:     '{{ booking.booking_reference }}',
+                razorpay_order_id:     response.razorpay_order_id,
+                razorpay_payment_id:   response.razorpay_payment_id,
+                razorpay_signature:    response.razorpay_signature,
+              })
+            });
+
+            const result = await verifyResp.json();
+            if (result.status === 'success') {
+              window.location.href = result.redirect_url;
+            } else {
+              alert('Payment verification failed. Contact support: +91 8355923184');
+              this.paying = false;
+            }
+          }
+        };
+
+        // 3. Open Razorpay
+        const rzp = new Razorpay(options);
+        rzp.on('payment.failed', (response) => {
+          alert('Payment failed: ' + response.error.description);
+          this.paying = false;
+        });
+        rzp.open();
+
+        // If preferredMethod is 'upi', pre-select UPI in Razorpay modal
+        if (preferredMethod === 'upi') {
+          options.method = 'upi';
+        }
+
+      } catch (error) {
+        console.error('Payment error:', error);
+        alert('Payment initialization failed. Please try again.');
+        this.paying = false;
+      }
+    }
+  };
+}
+</script>
+
+{% endblock %}

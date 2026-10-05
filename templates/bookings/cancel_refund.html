@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Cancel & Refund Booking #{{ booking.booking_reference }} — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-12 max-w-xl">
+  <div class="card bg-surface1 border-gridBorder p-8 space-y-6">
+    
+    <div class="space-y-1">
+      <span class="badge badge-red">CANCELLATION & REFUND</span>
+      <h1 class="heading-1 text-white">CANCEL RESERVATION</h1>
+      <p class="text-xs text-gray-400">Cancel booking <strong class="text-primaryRed font-mono">#{{ booking.booking_reference }}</strong> and initiate automatic refund.</p>
+    </div>
+
+    <!-- Refund Summary Box -->
+    <div class="p-5 rounded-2xl bg-surface2 border border-gridBorder space-y-3">
+      <div class="flex justify-between text-xs">
+        <span class="text-gray-400">Reserved Slot:</span>
+        <strong class="text-white">{{ booking.booking_date|date:"d M Y" }} @ {{ booking.start_time|time:"H:i" }}</strong>
+      </div>
+      <div class="flex justify-between text-xs">
+        <span class="text-gray-400">Seats:</span>
+        <span class="text-emerald-400 font-mono font-bold">{{ booking.seat_codes_display }}</span>
+      </div>
+      <div class="pt-2 border-t border-gridBorder/40 flex justify-between items-baseline text-xs">
+        <span class="text-gray-300 font-bold">Refund Amount:</span>
+        <span class="text-xl font-black text-emerald-400">₹{{ booking.total_amount }}</span>
+      </div>
+    </div>
+
+    <form method="POST" class="space-y-4">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label">Reason for Cancellation</label>
+        <select name="reason" class="form-select text-xs">
+          <option value="Schedule Conflict">Change of plans / Schedule conflict</option>
+          <option value="Squad Cancelled">My gaming squad couldn't make it</option>
+          <option value="Booked Wrong Time">Accidentally booked wrong slot</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div class="p-3 bg-red-950/40 border border-red-900 rounded-lg text-xs text-red-300">
+        ⚠️ Warning: This action is permanent. Your seat hold on {{ booking.seat_codes_display }} will be released immediately to other players.
+      </div>
+
+      <div class="pt-4 border-t border-gridBorder/50 flex items-center justify-between">
+        <a href="{% url 'bookings:booking_detail' booking_reference=booking.booking_reference %}" class="btn btn-secondary">Keep Booking</a>
+        <button type="submit" class="btn btn-primary bg-red-600 hover:bg-red-700">Confirm Cancellation & Refund</button>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

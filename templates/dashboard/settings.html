@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}System Settings & Announcements — Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container py-10 space-y-10">
+  
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div>
+      <span class="badge badge-red mb-1">PLATFORM CONFIGURATION</span>
+      <h1 class="display-title text-white">SYSTEM <span class="text-primaryRed">SETTINGS</span></h1>
+    </div>
+    <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- System Settings Form (7 Cols) -->
+    <div class="lg:col-span-7 card bg-surface1 border-gridBorder p-6 space-y-6">
+      <h3 class="font-bold text-sm text-white uppercase tracking-wider">GLOBAL VENUE PARAMETERS</h3>
+      
+      <form method="POST" class="space-y-4">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save_settings">
+
+        {% for setting in settings_list %}
+          <div class="form-group">
+            <label class="form-label">{{ setting.key|upper }} <span class="text-gray-500 font-normal lowercase text-[10px]">({{ setting.description }})</span></label>
+            <input type="text" name="setting_{{ setting.key }}" value="{{ setting.value }}" class="form-input text-xs">
+          </div>
+        {% endfor %}
+
+        <div class="pt-4 border-t border-gridBorder/40">
+          <button type="submit" class="btn btn-primary btn-sm">Save Global Parameters</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Announcements Manager (5 Cols) -->
+    <div class="lg:col-span-5 space-y-6">
+      <div class="card bg-surface1 border-gridBorder p-6 space-y-4">
+        <h3 class="font-bold text-sm text-white uppercase tracking-wider">PUBLISH VENUE BANNER ALERT</h3>
+        
+        <form method="POST" class="space-y-3">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="create_announcement">
+
+          <div class="form-group">
+            <label class="form-label">Alert Title</label>
+            <input type="text" name="title" required placeholder="e.g. Valorant Open Tournament Registrations Open!" class="form-input text-xs">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Badge Text</label>
+            <input type="text" name="badge_text" value="HOT" placeholder="e.g. HOT, NEW, ALERT" class="form-input text-xs">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Action URL</label>
+            <input type="text" name="action_url" placeholder="/community/events/" class="form-input text-xs">
+          </div>
+
+          <button type="submit" class="btn btn-secondary btn-sm w-full justify-center">
+            Publish Top Banner Alert
+          </button>
+        </form>
+      </div>
+
+      <!-- Active Announcements List -->
+      <div class="card bg-surface2 border-gridBorder p-5 space-y-3">
+        <h4 class="font-bold text-xs text-mutedRed uppercase">Active Banner Alerts</h4>
+        {% for ann in announcements %}
+          <div class="p-2.5 rounded-lg bg-surface1 border border-gridBorder/40 text-xs flex justify-between items-center">
+            <div>
+              <span class="badge badge-red text-[9px] mb-1">{{ ann.badge_text }}</span>
+              <strong class="text-white block">{{ ann.title }}</strong>
+            </div>
+            <span class="text-[10px] text-gray-500">{{ ann.created_at|date:"d M" }}</span>
+          </div>
+        {% empty %}
+          <p class="text-xs text-gray-400">No active banner announcements.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

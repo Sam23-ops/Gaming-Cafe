@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Esports Tournaments & LAN Events — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-12 space-y-12">
+  
+  <div class="text-center max-w-2xl mx-auto space-y-3">
+    <span class="badge badge-purple">COMPETITIVE CIRCUIT</span>
+    <h1 class="display-title text-white">TOURNAMENTS & <span class="text-primaryRed">EVENTS</span></h1>
+    <p class="text-xs md:text-sm text-gray-400">Register your team, climb tournament brackets, and compete for cash prize pools.</p>
+  </div>
+
+  <!-- Upcoming Tournaments -->
+  <div class="space-y-6">
+    <h2 class="heading-2 text-white flex items-center gap-2">
+      <i data-lucide="trophy" class="w-5 h-5 text-amber-400"></i>
+      <span>Upcoming Tournaments</span>
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {% for event in upcoming_events %}
+        <div class="card p-0 bg-surface1 border-gridBorder hover:border-primaryRed overflow-hidden group flex flex-col justify-between">
+          <div>
+            <div class="h-44 bg-surface2 relative overflow-hidden">
+              <img src="{{ event.display_banner }}" alt="{{ event.title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+              <div class="absolute inset-0 bg-gradient-to-t from-surface1 to-transparent"></div>
+              <div class="absolute bottom-3 left-4 flex gap-2">
+                <span class="badge badge-purple text-[10px]">{{ event.get_event_type_display }}</span>
+                {% if event.is_full %}
+                  <span class="badge badge-red text-[10px]">SLOTS FULL</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="p-6 space-y-3">
+              <h3 class="text-lg font-bold text-white group-hover:text-primaryRed transition">{{ event.title }}</h3>
+              <p class="text-xs text-gray-400 line-clamp-2">{{ event.description }}</p>
+
+              <div class="pt-2 space-y-1.5 text-xs text-gray-300">
+                <div class="flex justify-between">
+                  <span class="text-gray-400">Prize Pool:</span>
+                  <strong class="text-emerald-400">{{ event.prize_pool }}</strong>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-400">Schedule:</span>
+                  <span class="text-white">{{ event.start_time|date:"D, d M @ H:i" }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-400">Capacity:</span>
+                  <span class="text-amber-400 font-bold">{{ event.registrations.count }} / {{ event.max_participants }} Slots</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-6 pt-0">
+            <a href="{% url 'engagement:event_detail' slug=event.slug %}" class="btn btn-primary btn-sm w-full justify-center">
+              View Bracket & Register &rarr;
+            </a>
+          </div>
+        </div>
+      {% empty %}
+        <div class="col-span-3 card bg-surface1 border-gridBorder p-12 text-center text-xs text-gray-400">
+          No upcoming tournaments right now. Check back next week!
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Past Tournaments Showcase -->
+  {% if past_events %}
+    <div class="space-y-6 pt-8 border-t border-gridBorder/40">
+      <h2 class="heading-2 text-white flex items-center gap-2">
+        <i data-lucide="history" class="w-5 h-5 text-gray-400"></i>
+        <span>Past Tournament Champions</span>
+      </h2>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        {% for pe in past_events %}
+          <div class="card bg-surface2 border-gridBorder p-5 space-y-2">
+            <span class="badge badge-amber text-[10px]">CONCLUDED</span>
+            <h4 class="font-bold text-sm text-white">{{ pe.title }}</h4>
+            <p class="text-xs text-gray-400">{{ pe.start_time|date:"d M Y" }} • Prize: {{ pe.prize_pool }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

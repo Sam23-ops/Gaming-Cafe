@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Staff Command Center — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-10 space-y-8">
+  
+  <!-- Staff Header -->
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div>
+      <span class="badge badge-green mb-1">OPERATIONS DESK</span>
+      <h1 class="display-title text-white">STAFF <span class="text-primaryRed">COMMAND</span></h1>
+      <p class="text-xs text-gray-400">Manage live arena floor, customer check-ins, walk-ins, and active session timers.</p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <a href="{% url 'staff:live_arena' %}" class="btn btn-primary btn-sm">
+        <i data-lucide="monitor-play" class="w-4 h-4"></i> Live Arena Board
+      </a>
+      <a href="{% url 'staff:qr_scanner' %}" class="btn btn-secondary btn-sm">
+        <i data-lucide="scan-line" class="w-4 h-4"></i> QR Check-In
+      </a>
+      <a href="{% url 'staff:walkin_booking' %}" class="btn btn-outline btn-sm">
+        <i data-lucide="zap" class="w-4 h-4"></i> + Fast Walk-In
+      </a>
+    </div>
+  </div>
+
+  <!-- Real-time Floor Metrics -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    
+    <div class="card bg-surface1 border-gridBorder p-5 space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-gray-400 font-bold uppercase">Active Players</span>
+        <i data-lucide="users" class="w-5 h-5 text-emerald-400"></i>
+      </div>
+      <div class="text-3xl font-black text-white">{{ occupied_count }} <span class="text-xs text-gray-400 font-normal">/ {{ total_seats }}</span></div>
+      <span class="badge badge-green text-[10px]">{{ occupancy_pct }}% OCCUPIED</span>
+    </div>
+
+    <div class="card bg-surface1 border-gridBorder p-5 space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-gray-400 font-bold uppercase">Today's Revenue</span>
+        <i data-lucide="indian-rupee" class="w-5 h-5 text-primaryRed"></i>
+      </div>
+      <div class="text-3xl font-black text-white">₹{{ counter_revenue }}</div>
+      <span class="text-[10px] text-mutedRed">Collected today</span>
+    </div>
+
+    <div class="card bg-surface1 border-gridBorder p-5 space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-gray-400 font-bold uppercase">Today's Bookings</span>
+        <i data-lucide="calendar" class="w-5 h-5 text-amber-400"></i>
+      </div>
+      <div class="text-3xl font-black text-white">{{ todays_bookings.count }}</div>
+      <span class="text-[10px] text-gray-400">Scheduled sessions</span>
+    </div>
+
+    <div class="card bg-surface1 border-gridBorder p-5 space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-gray-400 font-bold uppercase">Floor Action</span>
+        <i data-lucide="zap" class="w-5 h-5 text-purple-400"></i>
+      </div>
+      <a href="{% url 'staff:walkin_booking' %}" class="btn btn-primary btn-sm w-full justify-center text-xs">
+        + Fast Walk-in Entry
+      </a>
+      <span class="text-[10px] text-gray-500 block text-center">30-sec desk booking</span>
+    </div>
+
+  </div>
+
+  <!-- Today's Queue & Check-In Stream -->
+  <div class="space-y-4">
+    <div class="flex items-center justify-between">
+      <h3 class="heading-2 text-white">TODAY'S ARRIVALS & SESSIONS</h3>
+      <a href="{% url 'staff:qr_scanner' %}" class="text-xs text-primaryRed font-bold hover:underline">Scan Ticket QR &rarr;</a>
+    </div>
+
+    <div class="card p-0 bg-surface1 border-gridBorder overflow-x-auto">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Time Slot</th>
+            <th>Ref #</th>
+            <th>Player Name</th>
+            <th>Zone & Seats</th>
+            <th>Duration</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in todays_bookings %}
+            <tr>
+              <td class="text-xs font-bold text-white">{{ b.start_time|time:"H:i" }}</td>
+              <td class="text-xs font-mono text-gray-400">#{{ b.booking_reference }}</td>
+              <td class="text-xs text-white font-semibold">{{ b.customer_name }}</td>
+              <td class="text-xs text-emerald-400 font-mono">{{ b.zone.name }} • {{ b.seat_codes_display }}</td>
+              <td class="text-xs text-gray-300">{{ b.duration_hours }}h</td>
+              <td>
+                <span class="badge {% if b.status == 'CHECKED_IN' or b.status == 'IN_SESSION' %}badge-green{% elif b.status == 'CONFIRMED' %}badge-amber{% else %}badge-red{% endif %} text-[9px]">
+                  {{ b.get_status_display }}
+                </span>
+              </td>
+              <td>
+                {% if b.status == 'CONFIRMED' or b.status == 'SEAT_HELD' %}
+                  <form method="POST" action="{% url 'staff:api_validate_checkin' %}" class="inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="qr_data" value="{{ b.booking_reference }}">
+                    <button type="submit" class="btn btn-primary btn-sm text-[10px] py-1 px-2.5">
+                      Check In
+                    </button>
+                  </form>
+                {% else %}
+                  <span class="text-xs text-gray-500">Active</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" class="text-center py-8 text-xs text-gray-400">No scheduled sessions for today yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

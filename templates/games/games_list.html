@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}Games Catalogue — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-12 space-y-10" x-data="{ activeModalGame: null, modalOpen: false }">
+  
+  <!-- Header & Search Header -->
+  <div class="space-y-4">
+    <div class="flex flex-col md:flex-row items-start md:items-end justify-between gap-4">
+      <div>
+        <span class="badge badge-red mb-2">PLAYABLE VAULT</span>
+        <h1 class="display-title text-white">GAMES <span class="text-primaryRed">CATALOGUE</span></h1>
+        <p class="text-sm text-gray-400">Discover AAA single-player campaigns, esports competitive shooters, and multiplayer co-op titles.</p>
+      </div>
+      <div class="text-xs text-mutedRed font-mono font-bold">
+        SHOWING {{ total_count }} TITLES
+      </div>
+    </div>
+
+    <!-- Filter & Search Controls Bar -->
+    <form method="GET" class="card bg-surface1 border-gridBorder p-4 space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+        
+        <!-- Search Input -->
+        <div class="md:col-span-5 relative">
+          <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5"></i>
+          <input type="text" name="q" value="{{ search_query }}" placeholder="Search by game title, developer or keyword..." class="form-input pl-10">
+        </div>
+
+        <!-- Genre Select -->
+        <div class="md:col-span-2">
+          <select name="genre" class="form-select" onchange="this.form.submit()">
+            <option value="">All Genres</option>
+            {% for g in genres %}
+              <option value="{{ g.slug }}" {% if selected_genre == g.slug %}selected{% endif %}>{{ g.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Platform Select -->
+        <div class="md:col-span-2">
+          <select name="platform" class="form-select" onchange="this.form.submit()">
+            <option value="">All Platforms</option>
+            <option value="PS5" {% if selected_platform == 'PS5' %}selected{% endif %}>PlayStation 5</option>
+            <option value="SIM_RACING" {% if selected_platform == 'SIM_RACING' %}selected{% endif %}>Sim Racing</option>
+          </select>
+        </div>
+
+        <!-- Player Mode Select -->
+        <div class="md:col-span-2">
+          <select name="mode" class="form-select" onchange="this.form.submit()">
+            <option value="">All Modes</option>
+            <option value="MULTIPLAYER" {% if selected_mode == 'MULTIPLAYER' %}selected{% endif %}>Multiplayer / Esports</option>
+            <option value="SINGLE" {% if selected_mode == 'SINGLE' %}selected{% endif %}>Single Player</option>
+            <option value="COOP" {% if selected_mode == 'COOP' %}selected{% endif %}>Co-op</option>
+          </select>
+        </div>
+
+        <!-- Search Button -->
+        <div class="md:col-span-1">
+          <button type="submit" class="btn btn-primary w-full h-full justify-center">
+            <i data-lucide="filter" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+      </div>
+    </form>
+  </div>
+
+  <!-- Games Cards Grid — Poster Style -->
+  {% if games %}
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {% for game in games %}
+        <div class="group relative rounded-2xl overflow-hidden cursor-pointer border transition-all duration-300 hover:scale-105 hover:shadow-2xl bg-surface1"
+             style="border-color:rgba(255,119,0,0.2); hover:border-color:#FF7700">
+
+          <!-- Poster Image — tall aspect ratio -->
+          <div class="aspect-[3/4] relative overflow-hidden">
+            <img src="{{ game.display_image }}" alt="{{ game.title }}"
+                 class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+
+            <!-- Dark overlay on hover -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
+
+            <!-- Top badges -->
+            <div class="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+              {% if game.is_new_release %}
+                <span class="text-[9px] font-black px-2 py-0.5 rounded-full text-black" style="background:#FF7700">🆕 NEW</span>
+              {% endif %}
+              {% if game.is_featured %}
+                <span class="text-[9px] font-black px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30">⭐ FEATURED</span>
+              {% endif %}
+            </div>
+            <div class="absolute top-3 right-3 z-10">
+              <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-black/60 text-amber-400 border border-amber-600">★ {{ game.rating }}</span>
+            </div>
+
+            <!-- Platform badge -->
+            <div class="absolute bottom-14 left-3 z-10">
+              {% for p in game.platforms.all %}
+                <span class="text-[9px] px-2 py-0.5 rounded-full font-bold"
+                      style="background:rgba(0,240,255,0.2); color:#00F0FF; border:1px solid rgba(0,240,255,0.4)">
+                  {% if p.platform_type == 'PS5' %}🎮 PS5{% elif p.platform_type == 'SIM_RACING' %}🏎️ SIM{% else %}{{ p.platform_type }}{% endif %}
+                </span>
+              {% endfor %}
+            </div>
+
+            <!-- Unavailable overlay -->
+            {% if not game.is_available %}
+              <div class="absolute inset-0 bg-black/80 flex items-center justify-center z-20">
+                <span class="text-[10px] font-bold text-red-400 border border-red-700 px-3 py-1 rounded-full">UPDATING</span>
+              </div>
+            {% endif %}
+
+            <!-- Bottom info overlay -->
+            <div class="absolute bottom-0 left-0 right-0 p-3 z-10">
+              <h3 class="font-black text-sm text-white leading-tight truncate drop-shadow-lg group-hover:text-orange-400 transition">
+                {{ game.title }}
+              </h3>
+              <p class="text-[10px] text-gray-300 mt-0.5">{{ game.genre.name }} · {{ game.get_player_mode_display }}</p>
+            </div>
+          </div>
+
+          <!-- Card Footer -->
+          <div class="p-3 flex items-center gap-2 bg-surface2">
+            <a href="{% url 'games:game_detail' slug=game.slug %}"
+               class="flex-1 py-2 text-center text-[11px] font-bold rounded-lg border border-gridBorder/50 text-gray-300 hover:border-orange-500 hover:text-white transition">
+              Info
+            </a>
+            {% if game.is_available %}
+            <a href="{% url 'bookings:wizard' %}?game={{ game.id }}"
+               class="flex-1 py-2 text-center text-[11px] font-black rounded-lg text-white transition"
+               style="background:linear-gradient(135deg,#FF7700,#FF5500)">
+              Book ₹{{ game.platforms.first.zone.hourly_rate|floatformat:0 }}/hr
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card bg-surface1 border-gridBorder p-12 text-center space-y-4">
+      <div class="w-12 h-12 rounded-full bg-surface2 text-gray-400 flex items-center justify-center mx-auto">
+        <i data-lucide="search-x" class="w-6 h-6"></i>
+      </div>
+      <h3 class="font-bold text-lg text-white">No Games Found</h3>
+      <p class="text-xs text-gray-400 max-w-sm mx-auto">No titles matched your search. Try clearing filters.</p>
+      <a href="{% url 'games:games_list' %}" class="btn btn-secondary btn-sm">Clear Filters</a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

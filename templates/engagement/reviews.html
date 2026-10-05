@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Verified Player Reviews — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-12 space-y-12">
+  
+  <div class="flex flex-col md:flex-row items-start md:items-end justify-between gap-4">
+    <div>
+      <span class="badge badge-green mb-1">VERIFIED EXPERIENCES</span>
+      <h1 class="display-title text-white">PLAYER <span class="text-primaryRed">REVIEWS</span></h1>
+      <p class="text-xs md:text-sm text-gray-400">Honest feedback from verified players and esports competitors.</p>
+    </div>
+    
+    <a href="{% url 'engagement:submit_review' %}" class="btn btn-primary btn-sm">
+      <i data-lucide="edit" class="w-4 h-4"></i>
+      <span>Write a Review</span>
+    </a>
+  </div>
+
+  <!-- Rating Distribution Scorecard -->
+  <div class="card bg-surface1 border-gridBorder p-8 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+    <div class="md:col-span-4 text-center md:text-left space-y-2">
+      <div class="text-5xl font-black text-white">{{ avg_rating }}<span class="text-xl text-amber-400">/5</span></div>
+      <div class="text-amber-400 text-lg">
+        ★★★★★
+      </div>
+      <p class="text-xs text-gray-400">Based on {{ total_reviews }} verified gamer ratings</p>
+    </div>
+
+    <!-- Rating Bars -->
+    <div class="md:col-span-8 space-y-2 text-xs">
+      <div class="flex items-center gap-3">
+        <span class="w-12 text-gray-400">5 Stars</span>
+        <div class="flex-1 bg-surface3 h-2.5 rounded-full overflow-hidden">
+          <div class="bg-amber-400 h-full rounded-full" style="width: {% if total_reviews %}{% widthratio rating_5 total_reviews 100 %}{% else %}0{% endif %}%"></div>
+        </div>
+        <span class="w-8 text-right text-gray-400 font-mono">{{ rating_5 }}</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span class="w-12 text-gray-400">4 Stars</span>
+        <div class="flex-1 bg-surface3 h-2.5 rounded-full overflow-hidden">
+          <div class="bg-amber-400 h-full rounded-full" style="width: {% if total_reviews %}{% widthratio rating_4 total_reviews 100 %}{% else %}0{% endif %}%"></div>
+        </div>
+        <span class="w-8 text-right text-gray-400 font-mono">{{ rating_4 }}</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span class="w-12 text-gray-400">3 Stars</span>
+        <div class="flex-1 bg-surface3 h-2.5 rounded-full overflow-hidden">
+          <div class="bg-amber-400 h-full rounded-full" style="width: {% if total_reviews %}{% widthratio rating_3 total_reviews 100 %}{% else %}0{% endif %}%"></div>
+        </div>
+        <span class="w-8 text-right text-gray-400 font-mono">{{ rating_3 }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reviews List -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {% for review in reviews %}
+      <div class="card bg-surface1 border-gridBorder hover:border-primaryRed p-6 space-y-4 flex flex-col justify-between">
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-surface2 border border-gridBorder flex items-center justify-center font-bold text-xs text-primaryRed">
+                {{ review.user.gamer_tag|slice:":2"|upper|default:review.user.username|slice:":2"|upper }}
+              </div>
+              <div>
+                <h4 class="font-bold text-sm text-white">{{ review.user.gamer_tag|default:review.user.username }}</h4>
+                <div class="text-amber-400 text-xs">
+                  {% for i in "12345"|make_list %}
+                    {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            {% if review.is_verified_booking %}
+              <span class="badge badge-green text-[10px]">✔ VERIFIED BOOKING</span>
+            {% endif %}
+          </div>
+
+          <h5 class="font-bold text-sm text-white">{{ review.title }}</h5>
+          <p class="text-xs text-gray-300 leading-relaxed">{{ review.comment }}</p>
+
+          <!-- Admin Response if any -->
+          {% if review.admin_response %}
+            <div class="p-3 rounded-lg bg-surface2 border-l-2 border-primaryRed text-xs space-y-1 mt-3">
+              <span class="font-bold text-primaryRed text-[11px] block">Response from Gammers Adda Staff:</span>
+              <p class="text-gray-300">{{ review.admin_response }}</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="pt-3 border-t border-gridBorder/40 text-[11px] text-gray-400">
+          Reviewed on {{ review.created_at|date:"d F Y" }}
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-span-2 card bg-surface1 border-gridBorder p-12 text-center text-xs text-gray-400">
+        No reviews submitted yet. Be the first to share your experience!
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

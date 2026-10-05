@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-12 max-w-2xl">
+  <div class="card bg-surface1 border-gridBorder p-8 space-y-6">
+    
+    <div class="space-y-1">
+      <span class="badge badge-red">ACCOUNT SETTINGS</span>
+      <h1 class="heading-1 text-white">GAMER PROFILE</h1>
+      <p class="text-xs text-gray-400">Manage your gamer tag, favorite gaming platforms, and contact preferences.</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+      {% csrf_token %}
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="form-group">
+          <label class="form-label">First Name</label>
+          {{ form.first_name }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name</label>
+          {{ form.last_name }}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="form-group">
+          <label class="form-label">Gamer Tag / Handle</label>
+          {{ form.gamer_tag }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          {{ form.phone }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        {{ form.email }}
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="form-group">
+          <label class="form-label">Favorite Platform</label>
+          {{ form.favorite_platform }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Favorite Genre</label>
+          {{ form.favorite_genre }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Date of Birth (For Birthday Perks)</label>
+        {{ form.date_of_birth }}
+      </div>
+
+      <div class="flex items-center gap-2 pt-2">
+        {{ form.marketing_consent }}
+        <label class="text-xs text-gray-300">Receive alerts on upcoming esports tournaments and special discounts.</label>
+      </div>
+
+      <div class="pt-4 border-t border-gridBorder/50 flex items-center justify-between">
+        <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save Profile Changes</button>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

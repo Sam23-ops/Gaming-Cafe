@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Failed — Gammers Adda{% endblock %}
+
+{% block content %}
+<div class="container py-16 max-w-lg text-center space-y-6">
+  
+  <div class="w-16 h-16 rounded-full bg-red-500/20 border border-red-500 text-red-500 flex items-center justify-center mx-auto">
+    <i data-lucide="x-circle" class="w-8 h-8"></i>
+  </div>
+
+  <span class="badge badge-red">TRANSACTION DECLINED</span>
+  <h1 class="display-title text-white">PAYMENT UNPAID</h1>
+  
+  <p class="text-xs text-gray-300 max-w-md mx-auto leading-relaxed">
+    {{ payment.failure_reason|default:"The transaction could not be completed by your bank or the simulated gateway rejected the attempt." }}
+  </p>
+
+  <div class="p-4 rounded-xl bg-surface2 border border-gridBorder text-left space-y-2 text-xs">
+    <div class="flex justify-between">
+      <span class="text-gray-400">Booking Reference:</span>
+      <span class="text-white font-mono font-bold">#{{ booking.booking_reference }}</span>
+    </div>
+    <div class="flex justify-between">
+      <span class="text-gray-400">Seats Reserved:</span>
+      <span class="text-emerald-400 font-mono">{{ booking.seat_codes_display }}</span>
+    </div>
+    <div class="flex justify-between">
+      <span class="text-gray-400">Amount Due:</span>
+      <span class="text-primaryRed font-bold">₹{{ booking.total_amount }}</span>
+    </div>
+  </div>
+
+  <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+    <a href="{% url 'payments:checkout' booking_reference=booking.booking_reference %}" class="btn btn-primary w-full sm:w-auto">
+      <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+      <span>Retry with Another Method</span>
+    </a>
+    <a href="{% url 'bookings:wizard' %}" class="btn btn-secondary w-full sm:w-auto">
+      Re-select Booking
+    </a>
+  </div>
+
+</div>
+{% endblock %}
