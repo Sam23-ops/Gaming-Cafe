@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Booking Confirmation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #0f121a;
+            color: #e5e7eb;
+        }
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+            background-color: #1a1d2e;
+        }
+        .header {
+            background: linear-gradient(135deg, #FF7700 0%, #FF5500 100%);
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .logo {
+            font-size: 32px;
+            font-weight: 900;
+            color: white;
+            margin: 0;
+            letter-spacing: 1px;
+        }
+        .tagline {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0 0 10px 0;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: #9ca3af;
+            margin: 0 0 30px 0;
+        }
+        .alert-box {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .alert-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #10b981;
+            margin: 0 0 8px 0;
+        }
+        .alert-text {
+            font-size: 14px;
+            color: #d1d5db;
+            margin: 0;
+            line-height: 1.6;
+        }
+        .section {
+            background-color: #252938;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid #374151;
+        }
+        .section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #FF7700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin: 0 0 20px 0;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #374151;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-size: 14px;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+        .info-value {
+            font-size: 14px;
+            color: #ffffff;
+            font-weight: 700;
+            text-align: right;
+        }
+        .highlight {
+            color: #FF7700;
+        }
+        .success {
+            color: #10b981;
+        }
+        .total-row {
+            background: linear-gradient(135deg, rgba(255, 119, 0, 0.15) 0%, rgba(255, 85, 0, 0.15) 100%);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+        .total-label {
+            font-size: 16px;
+            color: #d1d5db;
+            font-weight: 600;
+        }
+        .total-value {
+            font-size: 32px;
+            color: #FF7700;
+            font-weight: 900;
+        }
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .badge-success {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        .badge-info {
+            background-color: rgba(0, 240, 255, 0.2);
+            color: #00F0FF;
+        }
+        .badge-warning {
+            background-color: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+        .footer {
+            background-color: #0f121a;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #374151;
+        }
+        .footer-text {
+            font-size: 13px;
+            color: #6b7280;
+            margin: 5px 0;
+        }
+        .contact-info {
+            font-size: 14px;
+            color: #9ca3af;
+            margin: 15px 0 5px 0;
+        }
+        .contact-link {
+            color: #FF7700;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 25px 20px;
+            }
+            .section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1 class="logo">🎮 GAMMERS ADDA</h1>
+            <p class="tagline">Ultimate Gaming Arena · Navi Mumbai</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <h2 class="title">New Booking Confirmed!</h2>
+            <p class="subtitle">{{ notification_time }}</p>
+
+            <!-- Alert Box -->
+            <div class="alert-box">
+                <p class="alert-title">✓ Booking Successfully Created</p>
+                <p class="alert-text">A new gaming session has been booked. Please review the details below and prepare the station.</p>
+            </div>
+
+            <!-- Booking Reference -->
+            <div class="section">
+                <h3 class="section-title">📋 Booking Reference</h3>
+                <div class="info-row">
+                    <span class="info-label">Reference Number</span>
+                    <span class="info-value highlight">#{{ booking.booking_reference }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Status</span>
+                    <span class="info-value"><span class="badge badge-success">{{ booking.get_status_display }}</span></span>
+                </div>
+            </div>
+
+            <!-- Customer Information -->
+            <div class="section">
+                <h3 class="section-title">👤 Customer Information</h3>
+                <div class="info-row">
+                    <span class="info-label">Customer Name</span>
+                    <span class="info-value">{{ customer_name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email Address</span>
+                    <span class="info-value">{{ customer_email }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Phone Number</span>
+                    <span class="info-value">{{ customer_phone }}</span>
+                </div>
+            </div>
+
+            <!-- Session Details -->
+            <div class="section">
+                <h3 class="section-title">🎯 Session Details</h3>
+                <div class="info-row">
+                    <span class="info-label">Screen / Station</span>
+                    <span class="info-value highlight">{{ screen_number }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Zone</span>
+                    <span class="info-value">{{ zone_name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Booking Date</span>
+                    <span class="info-value">{{ booking_date }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Start Time</span>
+                    <span class="info-value success">{{ start_time }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Total Hours Booked</span>
+                    <span class="info-value">{{ total_hours }} Hour(s)</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">End Time</span>
+                    <span class="info-value">{{ end_time }}</span>
+                </div>
+            </div>
+
+            <!-- Payment Information -->
+            <div class="section">
+                <h3 class="section-title">💰 Payment Information</h3>
+                <div class="info-row">
+                    <span class="info-label">Payment Status</span>
+                    <span class="info-value"><span class="badge {{ payment_badge_class }}">{{ payment_status }}</span></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Base Amount</span>
+                    <span class="info-value">₹{{ base_amount }}</span>
+                </div>
+                {% if addons_amount > 0 %}
+                <div class="info-row">
+                    <span class="info-label">Add-ons / Snacks</span>
+                    <span class="info-value">₹{{ addons_amount }}</span>
+                </div>
+                {% endif %}
+                {% if discount_amount > 0 %}
+                <div class="info-row">
+                    <span class="info-label">Discount Applied</span>
+                    <span class="info-value success">-₹{{ discount_amount }}</span>
+                </div>
+                {% endif %}
+                <div class="info-row">
+                    <span class="info-label">GST (18%)</span>
+                    <span class="info-value">₹{{ tax_amount }}</span>
+                </div>
+                
+                <div class="total-row">
+                    <div class="info-row" style="border: none; padding: 0;">
+                        <span class="total-label">TOTAL AMOUNT</span>
+                        <span class="total-value">₹{{ total_amount }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {% if offer_applied %}
+            <!-- Offer/Discount Details -->
+            <div class="section">
+                <h3 class="section-title">🎁 Offer Applied</h3>
+                <div class="info-row">
+                    <span class="info-label">Offer Name</span>
+                    <span class="info-value">{{ offer_name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Discount Value</span>
+                    <span class="info-value success">{{ offer_discount }}</span>
+                </div>
+                {% if offer_description %}
+                <div class="info-row">
+                    <span class="info-label">Details</span>
+                    <span class="info-value">{{ offer_description }}</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p class="contact-info"><strong>Contact Information</strong></p>
+            <p class="footer-text">
+                Phone: <a href="tel:+918850411925" class="contact-link">+91 88504 11925</a> / <a href="tel:+919870733633" class="contact-link">+91 98707 33633</a>
+            </p>
+            <p class="footer-text">
+                Email: <a href="mailto:Sammarvalkar343@gmail.com" class="contact-link">Sammarvalkar343@gmail.com</a>
+            </p>
+            <p class="footer-text" style="margin-top: 20px;">
+                Gammers Adda · Kopar Khairane, Navi Mumbai
+            </p>
+            <p class="footer-text" style="color: #4b5563; font-size: 12px; margin-top: 15px;">
+                This is an automated notification. Please do not reply to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

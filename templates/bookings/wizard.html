@@ -3,45 +3,99 @@
 
 {% block title %}Book a Seat — Gammers Adda Interactive Arena{% endblock %}
 
+{% block extra_head %}
+<style>
+  /* Mobile Responsive Booking Wizard */
+  @media (max-width: 768px) {
+    .wizard-container {
+      padding: 0.5rem;
+    }
+    
+    .wizard-step {
+      padding: 1rem !important;
+    }
+    
+    .wizard-header h1 {
+      font-size: 1.75rem !important;
+    }
+    
+    .seat-map {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .seat-grid {
+      min-width: 300px;
+    }
+    
+    .price-summary {
+      position: static !important;
+      margin-top: 1rem;
+    }
+    
+    .form-grid {
+      grid-template-columns: 1fr !important;
+    }
+    
+    .addon-grid {
+      grid-template-columns: 1fr 1fr !important;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .addon-grid {
+      grid-template-columns: 1fr !important;
+    }
+    
+    .wizard-step-number {
+      width: 1.5rem;
+      height: 1.5rem;
+      font-size: 0.75rem;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-10" x-data="bookingWizard()">
+<div class="container py-6 md:py-10 wizard-container" x-data="bookingWizard()">
   
   <!-- Wizard Header -->
-  <div class="mb-8 space-y-2">
+  <div class="mb-6 md:mb-8 space-y-2 wizard-header">
     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface2 border border-gridBorder text-xs text-mutedRed">
       <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-      <span>REAL-TIME SEAT INVENTORY</span>
+      <span class="hidden sm:inline">REAL-TIME SEAT INVENTORY</span>
+      <span class="sm:hidden">LIVE BOOKING</span>
     </div>
-    <h1 class="display-title text-white">RESERVE YOUR <span class="text-primaryRed">BATTLE STATION</span></h1>
-    <p class="text-xs md:text-sm text-gray-400">Select your date, preferred gaming zone, seat on the arena map, and lock in your session.</p>
+    <h1 class="text-2xl md:text-4xl font-black text-white">RESERVE YOUR <span class="text-primaryRed">BATTLE STATION</span></h1>
+    <p class="text-xs md:text-sm text-gray-400">Select your date, zone, seat, and gaming session.</p>
   </div>
 
   <form method="POST" action="{% url 'bookings:wizard' %}" id="bookingForm" @submit="validateBeforeSubmit($event)">
     {% csrf_token %}
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-8 items-start">
       
-      <!-- Main Progressive Wizard Steps (Left 8 Cols) -->
-      <div class="lg:col-span-8 space-y-8">
+      <!-- Main Progressive Wizard Steps -->
+      <div class="lg:col-span-8 space-y-4 md:space-y-8">
         
         <!-- STEP 1: Date, Start Time & Duration -->
-        <div class="card bg-surface1 border-gridBorder p-6 space-y-5">
-          <div class="flex items-center gap-3 pb-3 border-b border-gridBorder/40">
-            <span class="w-7 h-7 rounded-full bg-primaryRed text-white text-xs font-black flex items-center justify-center">1</span>
-            <h3 class="font-bold text-base text-white">CHOOSE DATE & TIME SLOT</h3>
+        <div class="card bg-surface1 border-gridBorder p-4 md:p-6 space-y-4 md:space-y-5 wizard-step">
+          <div class="flex items-center gap-2 md:gap-3 pb-3 border-b border-gridBorder/40">
+            <span class="w-6 h-6 md:w-7 md:h-7 rounded-full bg-primaryRed text-white text-xs font-black flex items-center justify-center wizard-step-number">1</span>
+            <h3 class="font-bold text-sm md:text-base text-white">DATE & TIME</h3>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 form-grid">
             <!-- Date Picker -->
             <div class="form-group mb-0">
-              <label class="form-label">Booking Date</label>
-              <input type="date" name="booking_date" x-model="bookingDate" min="{{ today_str }}" @change="fetchSeatAvailability()" required class="form-input text-xs font-semibold">
+              <label class="form-label text-xs md:text-sm">Booking Date</label>
+              <input type="date" name="booking_date" x-model="bookingDate" min="{{ today_str }}" @change="fetchSeatAvailability()" required class="form-input text-xs md:text-sm font-semibold">
             </div>
 
             <!-- Start Time -->
             <div class="form-group mb-0">
-              <label class="form-label">Start Time</label>
-              <select name="start_time" x-model="startTime" @change="fetchSeatAvailability()" required class="form-select text-xs font-semibold">
+              <label class="form-label text-xs md:text-sm">Start Time</label>
+              <select name="start_time" x-model="startTime" @change="fetchSeatAvailability()" required class="form-select text-xs md:text-sm font-semibold">
                 <option value="10:00">10:00 AM</option>
                 <option value="11:00">11:00 AM</option>
                 <option value="12:00">12:00 PM</option>

@@ -1,0 +1,84 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# GAMMERS ADDA - Git Ignore Configuration
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── Environment & Secrets ─────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.env
+*.key
+*.pem
+secrets/
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ── Django ────────────────────────────────────────────────────────────────────
+*.log
+db.sqlite3
+db.sqlite3-journal
+/media/
+/staticfiles/
+local_settings.py
+
+# ── IDEs & Editors ────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# ── Virtual Environments ──────────────────────────────────────────────────────
+venv/
+ENV/
+env/
+.venv/

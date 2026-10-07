@@ -1,7 +1,7 @@
 """
 Notification signals:
 - Sends email to owner on user login
-- Sends email to owner on new booking
+- Sends professional HTML email to owner on new booking confirmation
 Completely fail-safe with threading and fail_silently=True.
 """
 import threading
@@ -11,6 +11,7 @@ from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
+from apps.core.email_utils import send_booking_confirmation_email
 
 
 def _get_client_ip(request):
@@ -30,7 +31,7 @@ def _role_label(user):
 
 
 def _send_notification(user, request):
-    recipient = getattr(settings, 'LOGIN_NOTIFICATION_EMAIL', 'sumitmaheshmarvalkar343@gmail.com')
+    recipient = getattr(settings, 'OWNER_NOTIFICATION_EMAIL', 'Sammarvalkar343@gmail.com')
     ip_address = _get_client_ip(request)
     user_agent = request.META.get('HTTP_USER_AGENT', 'Unknown')
     timestamp = timezone.now().strftime('%d %b %Y %I:%M:%S %p IST')
@@ -130,22 +131,30 @@ Email: sumitmaheshmarvalkar343@gmail.com
 
 @receiver(user_logged_in)
 def notify_admin_on_login(sender, request, user, **kwargs):
-    """Notify owner on every login."""
-    t = threading.Thread(target=_send_notification, args=(user, request), daemon=True)
-    t.start()
+    """
+    Notify owner on every login.
+    DISABLED - Too many emails. Re-enable by uncommenting the threading line.
+    """
+    # t = threading.Thread(target=_send_notification, args=(user, request), daemon=True)
+    # t.start()
+    pass
 
 
 @receiver(post_save, sender='bookings.Booking')
 def notify_admin_on_booking(sender, instance, created, **kwargs):
     """
-    Notify owner when a booking is CONFIRMED or IN_SESSION.
-    - created=True means brand new booking
-    - or when status changes to CONFIRMED
+    Send professional HTML email when booking is CONFIRMED.
+    Includes all details: customer, screen, times, payment, offers.
     """
-    if created and instance.status in ['CONFIRMED', 'SEAT_HELD', 'IN_SESSION']:
-        t = threading.Thread(target=_send_booking_notification, args=(instance,), daemon=True)
-        t.start()
-    elif instance.status == 'CONFIRMED':
-        # Also notify on status change to CONFIRMED
-        t = threading.Thread(target=_send_booking_notification, args=(instance,), daemon=True)
-        t.start()
+    # Only send on CONFIRMED status
+    if instance.status == 'CONFIRMED':
+        # Get payment if exists
+        payment = None
+        try:
+            from apps.payments.models import Payment
+            payment = Payment.objects.filter(booking=instance).first()
+        except Exception:
+            pass
+        
+        # Send professional HTML email
+        send_booking_confirmation_email(instance, payment)

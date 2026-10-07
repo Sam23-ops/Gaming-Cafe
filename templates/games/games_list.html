@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Games Catalogue — Gammers Adda{% endblock %}
 
@@ -77,8 +78,37 @@
 
           <!-- Poster Image — tall aspect ratio -->
           <div class="aspect-[3/4] relative overflow-hidden">
-            <img src="{{ game.display_image }}" alt="{{ game.title }}"
-                 class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+
+            {% if 'wwe' in game.title|lower and '2k26' in game.title|lower %}
+              <img src="{% static 'images/WWE2k26.png' %}" alt="{{ game.title }}"
+                   class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+            {% elif 'wwe' in game.title|lower and '2k25' in game.title|lower %}
+              <img src="{% static 'images/WWE2k25.png' %}" alt="{{ game.title }}"
+                   class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+
+            {% elif 'kombat' in game.title|lower and '11' in game.title %}
+              <img src="{% static 'images/mortal-kombat-11.png' %}" alt="{{ game.title }}"
+                   class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+            {% elif 'kombat' in game.title|lower %}
+              <img src="{% static 'images/mortal-kombat-1.png' %}" alt="{{ game.title }}"
+                   class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+
+            {% elif 'gta' in game.title|lower or 'grand theft' in game.title|lower %}
+              <img src="{% static 'images/GTA5.png' %}" alt="{{ game.title }}"
+                   class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+
+            {% elif 'forza' in game.title|lower %}
+              <img src="{% static 'images/forza-horizon.png' %}" alt="{{ game.title }}"
+                   class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+
+            {% elif 'f1' in game.title|lower or 'formula' in game.title|lower %}
+              <img src="{% static 'images/f1.png' %}" alt="{{ game.title }}"
+                   class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+
+            {% else %}
+              <img src="{{ game.display_image }}" alt="{{ game.title }}"
+                   class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+            {% endif %}
 
             <!-- Dark overlay on hover -->
             <div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>

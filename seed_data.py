@@ -34,7 +34,7 @@ def seed_all():
     for key, val, desc in [
         ('site_name',     "Gamer's Adda",       "Brand"),
         ('tagline',       "PLAY • ENJOY • CONNECT", "Slogan"),
-        ('contact_phone', "+91 8355923184",     "Phone"),
+        ('contact_phone', "+91 88504 11925 / +91 98707 33633",     "Phone"),
         ('contact_email', "sumitmaheshmarvalkar343@gmail.com", "Email"),
         ('venue_address', "Shankar Mahadev Apt, Sector 5, Kopar Khairane, Navi Mumbai, Maharashtra 400709", "Address"),
         ('opening_hours', "10:00 AM – 02:00 AM (Mon – Sun)", "Hours"),

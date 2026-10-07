@@ -345,3 +345,17 @@ def toggle_seat_maintenance_view(request, seat_id):
         messages.info(request, f"Seat {seat.code} is now {status_str}.")
 
     return redirect('staff:live_arena')
+
+
+@role_required(STAFF_ROLES)
+def session_monitor_view(request):
+    """
+    Premium real-time session monitor dashboard for staff/admin.
+    Shows all active sessions with detailed timer info and advanced controls:
+    - Extend, pause, resume, terminate sessions
+    - Customer info, payment status, offers
+    - Elapsed/remaining time with live updates
+    """
+    return render(request, 'staff/session_monitor.html', {
+        'page_title': 'Live Session Monitor',
+    })

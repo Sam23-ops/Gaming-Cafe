@@ -29,6 +29,6 @@ class SeatHoldAdmin(admin.ModelAdmin):
 
 @admin.register(BookingSession)
 class BookingSessionAdmin(admin.ModelAdmin):
-    list_display = ['id', 'booking', 'seat', 'status', 'actual_start_time', 'expected_end_time', 'extended_minutes']
+    list_display = ['booking', 'status', 'scheduled_start_time', 'scheduled_end_time', 'extended_minutes']
     list_filter = ['status']
     search_fields = ['booking__booking_reference', 'seat__code']

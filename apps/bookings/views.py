@@ -376,3 +376,37 @@ def cancel_booking_view(request, booking_reference):
         return redirect('bookings:my_bookings')
 
     return render(request, 'bookings/cancel_refund.html', {'booking': booking})
+
+
+@login_required
+def my_session_timer_view(request, booking_reference):
+    """
+    Customer-facing real-time session timer dashboard.
+    Shows elapsed/remaining time, session status, and booking details.
+    """
+    booking = get_object_or_404(
+        Booking.objects.prefetch_related('seats__seat'),
+        booking_reference=booking_reference
+    )
+    
+    # Ensure only booking owner can view their timer
+    if booking.user != request.user and not request.user.is_staff:
+        messages.error(request, "Access denied. You can only view your own sessions.")
+        return redirect('accounts:dashboard')
+    
+    # Check if session exists
+    try:
+        session = booking.active_session
+    except BookingSession.DoesNotExist:
+        messages.warning(request, "No active session found for this booking.")
+        return redirect('bookings:booking_detail', booking_reference=booking_reference)
+    
+    # Only show timer for active sessions
+    if session.status not in ['IN_PROGRESS', 'EXTENDED', 'PAUSED']:
+        messages.info(request, f"Session status: {session.get_status_display()}")
+        return redirect('bookings:booking_detail', booking_reference=booking_reference)
+    
+    return render(request, 'bookings/my_session_timer.html', {
+        'booking': booking,
+        'session': session,
+    })

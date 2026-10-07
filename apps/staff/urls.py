@@ -6,6 +6,7 @@ app_name = 'staff'
 urlpatterns = [
     path('dashboard/', views.staff_dashboard_view, name='staff_dashboard'),
     path('live-arena/', views.live_arena_view, name='live_arena'),
+    path('session-monitor/', views.session_monitor_view, name='session_monitor'),
     path('qr-scanner/', views.qr_scanner_view, name='qr_scanner'),
     path('api/validate-checkin/', views.api_validate_checkin, name='api_validate_checkin'),
     path('walkin/', views.walkin_booking_view, name='walkin_booking'),

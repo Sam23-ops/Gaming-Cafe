@@ -1,0 +1,123 @@
+═══════════════════════════════════════════════════════════════════════════════
+GAMMERS ADDA - AUTOMATED SESSION START NOTIFICATIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+This system automatically sends professional email notifications when a gaming 
+session starts (when booking start time arrives).
+
+═══════════════════════════════════════════════════════════════════════════════
+OPTION 1: WINDOWS TASK SCHEDULER (Recommended)
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Press Windows + R, type: taskschd.msc, press Enter
+
+2. Click "Create Basic Task" in right panel
+
+3. Setup:
+   Name: Gammers Adda Session Checker
+   Description: Automatically start gaming sessions and send notifications
+
+4. Trigger:
+   - Select "Daily"
+   - Start: Today
+   - Recur every: 1 days
+   - Click "Next"
+
+5. Action:
+   - Select "Start a program"
+   - Program/script: C:\Users\Nibedita\Desktop\optimistic-bohr\run_session_checker.bat
+   - Click "Next" and "Finish"
+
+6. Edit the task (right-click -> Properties):
+   - Go to "Triggers" tab
+   - Edit trigger
+   - Check "Repeat task every: 1 minute"
+   - For a duration of: Indefinitely
+   - Click OK
+
+7. Go to "Settings" tab:
+   - Uncheck "Stop the task if it runs longer than:"
+   - Check "Run task as soon as possible after a scheduled start is missed"
+   - Click OK
+
+DONE! The system will now check every minute for sessions that need to start.
+
+═══════════════════════════════════════════════════════════════════════════════
+OPTION 2: MANUAL TESTING
+═══════════════════════════════════════════════════════════════════════════════
+
+Test the notification system manually:
+
+1. Double-click: run_session_checker.bat
+
+2. Or run in terminal:
+   cd C:\Users\Nibedita\Desktop\optimistic-bohr
+   python manage.py check_session_starts
+
+═══════════════════════════════════════════════════════════════════════════════
+OPTION 3: LINUX/MAC CRON (For production servers)
+═══════════════════════════════════════════════════════════════════════════════
+
+Add to crontab (run: crontab -e):
+
+# Check every minute for sessions to start
+* * * * * cd /path/to/optimistic-bohr && python manage.py check_session_starts >> /var/log/gammers_session_checker.log 2>&1
+
+═══════════════════════════════════════════════════════════════════════════════
+HOW IT WORKS
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Every minute, the system checks for bookings where:
+   - Status = CONFIRMED
+   - booking_date = today
+   - start_time = within next 2 minutes
+   - session_started_notification_sent = False
+
+2. When found:
+   - Sends professional email to: Sammarvalkar343@gmail.com
+   - Email contains:
+     * Customer name
+     * Screen number
+     * Start time (hour:minute)
+     * Duration in hours
+     * End time
+     * Applied offer/discount (if any)
+   - Updates booking status to: IN_SESSION
+   - Marks: session_started_notification_sent = True
+
+3. Email subject example:
+   "🕹️ Session Started — John Doe @ PS5-01"
+
+═══════════════════════════════════════════════════════════════════════════════
+TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════════
+
+If notifications are not sending:
+
+1. Check .env file has correct email credentials:
+   EMAIL_HOST_USER=your-email@gmail.com
+   EMAIL_HOST_PASSWORD=your-app-password
+   OWNER_NOTIFICATION_EMAIL=Sammarvalkar343@gmail.com
+
+2. Test email sending:
+   python manage.py shell
+   >>> from apps.core.email_utils import send_session_start_notification
+   >>> from apps.bookings.models import Booking
+   >>> booking = Booking.objects.filter(status='CONFIRMED').first()
+   >>> send_session_start_notification(booking)
+
+3. Check Task Scheduler is running the task:
+   - Open Task Scheduler
+   - Find "Gammers Adda Session Checker"
+   - Check "Last Run Result" = 0x0 (success)
+
+4. Check Python path is correct in .bat file
+
+═══════════════════════════════════════════════════════════════════════════════
+NEED HELP?
+═══════════════════════════════════════════════════════════════════════════════
+
+Contact: +91 83559 23184
+Email: Sammarvalkar343@gmail.com
+
+═══════════════════════════════════════════════════════════════════════════════

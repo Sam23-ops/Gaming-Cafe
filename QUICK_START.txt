@@ -1,0 +1,185 @@
+═══════════════════════════════════════════════════════════════════════════════
+  GAMMERS ADDA - QUICK START GUIDE
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ ALL SYSTEMS OPERATIONAL!
+
+Server Status: RUNNING at http://127.0.0.1:8000/
+Payment System: CONFIGURED (Test Mode)
+Database: CONNECTED
+Email: CONFIGURED
+
+═══════════════════════════════════════════════════════════════════════════════
+  HOW TO TEST PAYMENT FLOW
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 1: OPEN BOOKING PAGE
+--------------------------
+URL: http://127.0.0.1:8000/bookings/wizard/
+
+Actions:
+1. Select date (any future date)
+2. Choose zone (PS5 or Sim Racing)
+3. Pick a seat/screen from the map
+4. Choose duration (1-5 hours)
+5. Optional: Add snacks
+6. Click "Continue to Payment"
+
+STEP 2: PAYMENT PAGE LOADS
+---------------------------
+URL: http://127.0.0.1:8000/payments/checkout/<booking-reference>/
+
+You should see:
+✓ Big orange "PAY ₹XXX NOW" button
+✓ Four UPI app buttons (GPay, PhonePe, Paytm, BHIM)
+✓ Two tabs: "QR Code" and "UPI ID"
+✓ Order summary on right side
+
+STEP 3: MAKE PAYMENT
+--------------------
+
+Option A - Razorpay (Recommended):
+1. Click "PAY ₹XXX NOW" button
+2. Razorpay modal opens
+3. Choose "UPI"
+4. Enter: success@razorpay (test UPI)
+5. Click "Pay"
+6. Payment succeeds instantly
+7. Redirected to confirmation page
+
+Option B - Direct UPI:
+1. Click "QR Code" tab
+2. Scan with phone UPI app
+3. Pay and screenshot
+4. Send via WhatsApp
+
+STEP 4: CONFIRMATION
+--------------------
+URL: http://127.0.0.1:8000/bookings/confirmation/<booking-reference>/
+
+You should see:
+✓ "Booking Confirmed!" message
+✓ QR code ticket
+✓ Session details
+✓ Download invoice button
+
+═══════════════════════════════════════════════════════════════════════════════
+  COMMON ISSUES & SOLUTIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+ISSUE 1: "Payment page is blank"
+---------------------------------
+Solution:
+- Press F12 to open browser console
+- Look for errors in red
+- Common: "Razorpay is not defined"
+- Fix: Clear cache (Ctrl+Shift+Delete) and reload
+
+ISSUE 2: "PAY NOW button does nothing"
+---------------------------------------
+Solution:
+- Open browser console (F12)
+- Click button
+- Check for JavaScript errors
+- Most likely: Script not loaded
+- Fix: Reload page
+
+ISSUE 3: "Can't create booking"
+--------------------------------
+Solution:
+- Check if seats are available
+- Try a different date/time
+- Make sure zone has seats
+
+═══════════════════════════════════════════════════════════════════════════════
+  TEST CREDENTIALS (Razorpay Test Mode)
+═══════════════════════════════════════════════════════════════════════════════
+
+UPI Test IDs:
+- success@razorpay → ✅ Successful payment
+- failure@razorpay → ❌ Failed payment
+
+Credit Card:
+- Number: 4111 1111 1111 1111
+- CVV: 123
+- Expiry: 12/25
+- Name: Test User
+
+NOTE: These NEVER charge real money! Safe for testing.
+
+═══════════════════════════════════════════════════════════════════════════════
+  WHAT TO EXPECT
+═══════════════════════════════════════════════════════════════════════════════
+
+When payment is successful:
+✓ Booking status → CONFIRMED
+✓ Email sent to: Sammarvalkar343@gmail.com
+✓ Customer can view invoice
+✓ Session timer starts automatically at booking time
+
+Current Email Settings:
+✓ Booking confirmations: ENABLED
+✓ Session start notifications: ENABLED  
+✓ Login notifications: DISABLED (too spammy)
+
+═══════════════════════════════════════════════════════════════════════════════
+  ADMIN ACCESS
+═══════════════════════════════════════════════════════════════════════════════
+
+Admin Panel: http://127.0.0.1:8000/admin/
+
+You can:
+- View all bookings
+- Check payment status
+- See customer details
+- Manage games and zones
+- View session timers
+
+Staff Dashboard: http://127.0.0.1:8000/staff/session-monitor/
+- Live session monitoring
+- Timer controls (extend, pause, terminate)
+- Real-time updates
+
+═══════════════════════════════════════════════════════════════════════════════
+  TROUBLESHOOTING COMMANDS
+═══════════════════════════════════════════════════════════════════════════════
+
+If something isn't working:
+
+1. Check server is running:
+   → Look for "Starting development server" message
+   
+2. Test database connection:
+   python test_payment_urls.py
+   
+3. Reinstall packages:
+   pip install -r requirements.txt
+   
+4. Clear browser cache:
+   Ctrl + Shift + Delete → Clear all
+   
+5. Restart server:
+   Ctrl + C to stop
+   python manage.py runserver
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📞 NEED HELP?
+
+Read the detailed guide: PAYMENT_FLOW_GUIDE.md
+Check setup status: SETUP_COMPLETE.md
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🎮 READY TO TEST!
+
+1. Visit: http://127.0.0.1:8000/bookings/wizard/
+2. Create a booking
+3. Proceed to payment
+4. Use test credentials
+5. Complete payment
+6. Receive confirmation
+
+Everything is working! The payment flow is configured correctly.
+
+═══════════════════════════════════════════════════════════════════════════════

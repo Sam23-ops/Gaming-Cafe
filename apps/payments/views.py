@@ -26,6 +26,7 @@ from apps.bookings.models import Booking
 from apps.bookings.services import BookingStateMachine
 from apps.accounts.decorators import permission_required
 from apps.core.utils import log_action
+from .utils import generate_upi_qr_code, format_upi_id, format_phone_number
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -105,13 +106,33 @@ def checkout_view(request, booking_reference):
     real_gateway = (
         RAZORPAY_AVAILABLE
         and key_id
+        and key_id != 'rzp_test_YOUR_KEY_ID'
         and not key_id.startswith('rzp_test_YOUR')
     )
+
+    # Generate UPI QR code and payment details with better error handling
+    upi_qr_code = None
+    try:
+        upi_qr_code = generate_upi_qr_code(
+            amount=float(booking.total_amount),
+            booking_reference=booking.booking_reference
+        )
+    except Exception as e:
+        print(f"QR Code generation error: {e}")
+        # QR code is optional, continue without it
+    
+    upi_id = format_upi_id()
+    upi_phone = format_phone_number()
+    business_name = getattr(settings, 'BUSINESS_NAME', 'Gammers Adda')
 
     return render(request, 'payments/checkout.html', {
         'booking':       booking,
         'razorpay_key':  key_id,
         'real_gateway':  real_gateway,
+        'upi_qr_code':   upi_qr_code,
+        'upi_id':        upi_id,
+        'upi_phone':     upi_phone,
+        'business_name': business_name,
     })
 
 
@@ -126,10 +147,25 @@ def razorpay_create_order(request, booking_reference):
         return JsonResponse({'error': 'POST required'}, status=405)
 
     booking = get_object_or_404(Booking, booking_reference=booking_reference)
-    client  = _get_razorpay_client()
-
+    
+    # Check if Razorpay is available and configured
+    if not RAZORPAY_AVAILABLE:
+        return JsonResponse({
+            'error': 'Razorpay module not installed. Please install: pip install razorpay'
+        }, status=503)
+    
+    client = _get_razorpay_client()
     if not client:
-        return JsonResponse({'error': 'Razorpay not configured'}, status=503)
+        return JsonResponse({
+            'error': 'Razorpay not configured. Please check RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET'
+        }, status=503)
+    
+    # Validate Razorpay keys
+    key_id = getattr(settings, 'RAZORPAY_KEY_ID', '')
+    if not key_id or key_id == 'rzp_test_YOUR_KEY_ID':
+        return JsonResponse({
+            'error': 'Invalid Razorpay keys. Please configure valid API keys in environment variables.'
+        }, status=503)
 
     # Amount in paise (₹1 = 100 paise)
     amount_paise = int(booking.total_amount * 100)
@@ -137,7 +173,7 @@ def razorpay_create_order(request, booking_reference):
     try:
         order = client.order.create({
             'amount':   amount_paise,
-            'currency': settings.RAZORPAY_CURRENCY,
+            'currency': getattr(settings, 'RAZORPAY_CURRENCY', 'INR'),
             'receipt':  booking.booking_reference,
             'notes': {
                 'booking_ref':   booking.booking_reference,
@@ -146,7 +182,10 @@ def razorpay_create_order(request, booking_reference):
             }
         })
     except Exception as exc:
-        return JsonResponse({'error': str(exc)}, status=500)
+        return JsonResponse({
+            'error': f'Razorpay API error: {str(exc)}',
+            'details': 'Please check your Razorpay credentials or try UPI payment instead.'
+        }, status=500)
 
     # Persist the gateway order id on Payment record
     payment, _ = Payment.objects.get_or_create(

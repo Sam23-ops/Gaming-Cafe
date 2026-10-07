@@ -5,13 +5,18 @@ Django settings for Gammers Adda gaming-cafe platform.
 import os
 from pathlib import Path
 
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-gammers-adda-ultra-gaming-cafe-secret-key-2026'
+# Security settings from environment
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-gammers-adda-ultra-gaming-cafe-secret-key-2026')
 
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -36,13 +41,14 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Static files for production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'apps.core.middleware.SiteVisitNotificationMiddleware',  # Notify owner on every page visit
+    # 'apps.core.middleware.SiteVisitNotificationMiddleware',  # DISABLED - Too many emails
 ]
 
 ROOT_URLCONF = 'gammers_adda.urls'
@@ -69,8 +75,8 @@ WSGI_APPLICATION = 'gammers_adda.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': os.environ.get('DATABASE_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': BASE_DIR / os.environ.get('DATABASE_NAME', 'db.sqlite3'),
     }
 }
 
@@ -92,8 +98,20 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+# WhiteNoise configuration for static files in production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# ── Production Security Settings ──────────────────────────────────────────────
+if not DEBUG:
+    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'False') == 'True'
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -102,10 +120,10 @@ LOGIN_REDIRECT_URL = '/accounts/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
 
 # Seat Hold Expiration Window (in minutes)
-SEAT_HOLD_DURATION_MINUTES = 10
+SEAT_HOLD_DURATION_MINUTES = int(os.environ.get('SEAT_HOLD_DURATION_MINUTES', 10))
 
 # Tax Rate (e.g., 18% GST)
-DEFAULT_TAX_PERCENTAGE = 18.0
+DEFAULT_TAX_PERCENTAGE = float(os.environ.get('DEFAULT_TAX_PERCENTAGE', 18.0))
 
 # ── SMTP Email Configuration ──────────────────────────────────────────────────
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -114,9 +132,11 @@ EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', "Gamer's Adda <noreply@gamersadda.com>")
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', "Gammers Adda <noreply@gamersadda.com>")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
-LOGIN_NOTIFICATION_EMAIL = 'sumitmaheshmarvalkar343@gmail.com'
+
+# Owner notification email (from .env)
+OWNER_NOTIFICATION_EMAIL = os.environ.get('OWNER_NOTIFICATION_EMAIL', 'Sammarvalkar343@gmail.com')
 
 # ── Razorpay Payment Gateway ──────────────────────────────────────────────────
 # Set real keys via environment variables in production.
@@ -124,3 +144,15 @@ LOGIN_NOTIFICATION_EMAIL = 'sumitmaheshmarvalkar343@gmail.com'
 RAZORPAY_KEY_ID     = os.environ.get('RAZORPAY_KEY_ID',     'rzp_test_YOUR_KEY_ID')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', 'YOUR_KEY_SECRET')
 RAZORPAY_CURRENCY   = 'INR'
+
+# ── UPI Payment Configuration ─────────────────────────────────────────────────
+UPI_ID = os.environ.get('UPI_ID', '7977729637@kotak')
+UPI_NAME = os.environ.get('UPI_NAME', 'Gammers Adda')
+UPI_PHONE = os.environ.get('UPI_PHONE', '+918850411925')
+
+# ── Business Settings ─────────────────────────────────────────────────────────
+BUSINESS_NAME = os.environ.get('BUSINESS_NAME', 'Gammers Adda')
+BUSINESS_PHONE = os.environ.get('BUSINESS_PHONE', '+918850411925')
+BUSINESS_PHONE_2 = os.environ.get('BUSINESS_PHONE_2', '+919870733633')
+BUSINESS_EMAIL = os.environ.get('BUSINESS_EMAIL', 'info@gamersadda.com')
+BUSINESS_ADDRESS = os.environ.get('BUSINESS_ADDRESS', 'Kopar Khairane, Navi Mumbai, Maharashtra')
